@@ -1,13 +1,20 @@
-## Clojure bot template for HWO-2014
+## Monoid RaceRaceR
 
-Install (OS X):
+# Clojure Environment
 
-    brew install leiningen
+*Command line: Leiningen*
+Install http://leiningen.org/#install
 
-Install (Debian/Ubuntu):
 
-Follow instructions for [Leiningen 2.x](http://leiningen.org/#install).
+*IDE: Nightcode (standalone jar)*
+Install https://nightcode.info/
 
-Adding your own dependencies:
+# Running
 
-Package as jars under ./lib.
+Use 'lein run' to start the program. In Nightcode, click 'run'.
+
+# REPL
+
+Use 'lein repl', and from there, run main with no arguments:
+	(-main)
+	
