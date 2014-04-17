@@ -3,7 +3,9 @@
             [com.stuartsierra.component :as component]
             [hwo2014bot.config :refer [default-conf]] ; :refer imports individual names into current namespace
             [hwo2014bot.trace :refer [new-tracer]]
-            [hwo2014bot.racer :refer [new-racer]]) 
+            [hwo2014bot.track :refer [new-track]]
+            [hwo2014bot.dashboard :refer [new-dashboard]]
+            [hwo2014bot.racer :refer [new-racer]])
   (:gen-class)) ; :gen-class instructs the compiler to build a class file for this namespace
 
 
@@ -13,7 +15,11 @@
     ;:db (new-database host port)
     ;:sched (new-scheduler)
     :tracer (new-tracer (:trace conf))
-    :racer (component/using (new-racer conf) [:tracer])))
+    :track (new-track)
+    :dashboard (component/using (new-dashboard (:dashboard conf))
+                                [:tracer :track])
+    :racer (component/using (new-racer conf)
+                            [:tracer :track :dashboard])))
 
 (defn- finished-race [bot-atom]
   (swap! bot-atom 

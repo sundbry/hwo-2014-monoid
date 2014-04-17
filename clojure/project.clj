@@ -9,7 +9,8 @@
                  [org.clojure/tools.logging "0.2.6"]                 
                  [log4j "1.2.17"]
                  ; Non-standard project dependencies below
-                 [com.stuartsierra/component "0.2.1"]]
+                 [com.stuartsierra/component "0.2.1"]
+                 [circular-buffer "0.1.0-SNAPSHOT"]]
   :main ^:skip-aot hwo2014bot.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})

@@ -6,4 +6,7 @@
    :key "NBANBPb2JZyDGw"
    :name "Monoid"
    :trace {:dir "data"} ; optional
+   :dashboard
+     {:instant 15; # of ticks for instantaneous measurements
+      :buffer 15}; # of ticks to keep buffered (must be at least a full instant)
    })
