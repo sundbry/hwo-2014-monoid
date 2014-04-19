@@ -17,6 +17,9 @@ goog.scope(function(){
 monoid.LoadRaceButton = function() {
   goog.base(this);
 
+  /** @private {monoid.RaceView} */
+  this.raceView_ = null;
+
   /** @private {goog.fs.FileReader} */
   this.fileReader_ = new goog.fs.FileReader();
   this.getHandler().listen(this.fileReader_, goog.fs.FileReader.EventType.LOAD,
@@ -45,6 +48,14 @@ LoadRaceButton.prototype.createDom = function() {
 
 
 /**
+ * @param {monoid.RaceView} raceView
+ */
+LoadRaceButton.prototype.setRaceView = function(raceView) {
+  this.raceView_ = raceView;
+};
+
+
+/**
  * @param {goog.events.BrowserEvent} e
  * @private
  */
@@ -59,6 +70,7 @@ LoadRaceButton.prototype.handleInputChanged_ = function(e) {
  */
 LoadRaceButton.prototype.handleLoad_ = function(e) {
   var file = this.fileReader_.getResult();
-  new monoid.Race(/** @type{string} */(file));
+  var race = new monoid.Race(/** @type{string} */(file));
+  this.raceView_.displayRace(race);
 };
 });

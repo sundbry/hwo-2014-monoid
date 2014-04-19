@@ -1,6 +1,6 @@
 @CHARSET "ISO-8859-1";
 
-#canvasdiv {
+.race-view {
 	box-sizing: border-box;
 	padding: 50px;
 	width: 100%;
