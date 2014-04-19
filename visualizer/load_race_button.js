@@ -2,6 +2,8 @@ goog.provide('monoid.LoadRaceButton');
 
 goog.require('goog.ui.Component');
 goog.require('goog.dom.classlist');
+goog.require('goog.fs');
+goog.require('goog.fs.FileReader');
 
 goog.scope(function(){
 
@@ -13,6 +15,12 @@ goog.scope(function(){
  */
 monoid.LoadRaceButton = function() {
   goog.base(this);
+
+  /** @private {goog.fs.FileReader} */
+  this.fileReader_ = new goog.fs.FileReader();
+  this.getHandler().listen(this.fileReader_, goog.fs.FileReader.EventType.LOAD,
+                           this.handleLoad_);
+  this.registerDisposable(this.fileReader_);
 };
 var LoadRaceButton = monoid.LoadRaceButton;
 goog.inherits(LoadRaceButton, goog.ui.Component);
@@ -31,5 +39,26 @@ LoadRaceButton.prototype.createDom = function() {
   var button = this.dom_.createDom('input', {type: 'file'});
   goog.dom.classlist.add(button, 'load-race-button');
   this.dom_.appendChild(element, button);
+  this.getHandler().listen(button, goog.events.EventType.CHANGE, this.handleInputChanged_);
+};
+
+
+/**
+ * @param {goog.events.BrowserEvent} e
+ * @private
+ */
+LoadRaceButton.prototype.handleInputChanged_ = function(e) {
+  this.fileReader_.readAsText(e.target.files[0]);
+};
+
+
+/**
+ * @param {goog.fs.ProgressEvent} e
+ * @private
+ */
+LoadRaceButton.prototype.handleLoad_ = function(e) {
+  var test = this.dom_.createElement('div');
+  this.dom_.setTextContent(test, this.fileReader_.getResult());
+  this.dom_.appendChild(this.getElement(), test);
 };
 });
