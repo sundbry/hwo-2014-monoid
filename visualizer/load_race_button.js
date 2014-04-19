@@ -4,6 +4,7 @@ goog.require('goog.ui.Component');
 goog.require('goog.dom.classlist');
 goog.require('goog.fs');
 goog.require('goog.fs.FileReader');
+goog.require('monoid.Race');
 
 goog.scope(function(){
 
@@ -64,5 +65,6 @@ LoadRaceButton.prototype.handleLoad_ = function(e) {
     this.dom_.setTextContent(test, ss[i]);
     this.dom_.appendChild(this.getElement(), test);
   }
+  new monoid.Race(file);
 };
 });
