@@ -32,5 +32,4 @@ LoadRaceButton.prototype.createDom = function() {
   goog.dom.classlist.add(button, 'load-race-button');
   this.dom_.appendChild(element, button);
 };
-
 });
