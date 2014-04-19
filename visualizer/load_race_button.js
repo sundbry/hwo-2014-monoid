@@ -59,12 +59,6 @@ LoadRaceButton.prototype.handleInputChanged_ = function(e) {
  */
 LoadRaceButton.prototype.handleLoad_ = function(e) {
   var file = this.fileReader_.getResult();
-  var ss = file.split('\n');
-  for (var i = 0; i < ss.length; i++) {
-    var test = this.dom_.createElement('div');
-    this.dom_.setTextContent(test, ss[i]);
-    this.dom_.appendChild(this.getElement(), test);
-  }
   new monoid.Race(/** @type{string} */(file));
 };
 });
