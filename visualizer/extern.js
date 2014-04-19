@@ -14,6 +14,16 @@ function CarMessage(){};
 
 /** @constructor */
 function TrackMessage(){};
+/** @type {string} */
+TrackMessage.prototype.id;
+/** @type {string} */
+TrackMessage.prototype.name;
+/** @type {Array.<{length: number, switch: boolean, radius: number, angle: number}>} */
+TrackMessage.prototype.pieces;
+/** @type {Array.<{distanceFromCenter: number, index: number}>} */
+TrackMessage.prototype.lanes;
+/** @type {{position: {x: number, y: number}, angle: number}} */
+TrackMessage.prototype.startingPoint;
 
 /** @constructor */
 function GenericMessage(){};
