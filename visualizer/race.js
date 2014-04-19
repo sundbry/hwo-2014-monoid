@@ -63,6 +63,9 @@ Race.prototype.parseInput = function(msg, timestamp) {
    case 'gameInit':
     this.gameInit(msg.data.race, timestamp);
     break;
+   case 'carPositions':
+    this.setPositionsAt(msg.data, msg.gameTick);
+    break;
    default:
     goog.log.info(Race.logger_, 'Unknown message type: ' + msg.msgType, msg);
   }
@@ -77,6 +80,15 @@ Race.prototype.gameInit = function(race, timestamp) {
   this.laps_ = race.raceSession.laps;
   this.maxLapTime_ = race.raceSession.maxLapTimeMs;
   this.quickRace_ = race.raceSession.quickRace;
+};
+
+
+/**
+ * @param {!Array<object>} positions
+ * @param {number} gameTick
+ */
+Race.prototype.setPositionsAt = function(positions, gameTick) {
+  // TODO: Set positions at the given game tick.
 };
 
 
