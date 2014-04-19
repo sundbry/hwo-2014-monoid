@@ -11,3 +11,8 @@ canvas {
 	height: 100%;
 	border: 1px solid black;
 }
+
+.load-race-button-label {
+	display: inline;
+	margin-right: 5px;
+}

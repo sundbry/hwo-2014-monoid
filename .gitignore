@@ -1,2 +1,4 @@
 log
 bot.pid
+/visualizer/closure
+/visualizer/main-compiled.js
