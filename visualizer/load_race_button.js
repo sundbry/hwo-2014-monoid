@@ -65,6 +65,6 @@ LoadRaceButton.prototype.handleLoad_ = function(e) {
     this.dom_.setTextContent(test, ss[i]);
     this.dom_.appendChild(this.getElement(), test);
   }
-  new monoid.Race(file);
+  new monoid.Race(/** @type{string} */(file));
 };
 });

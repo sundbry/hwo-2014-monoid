@@ -26,7 +26,7 @@ monoid.Race = function(raceLog) {
   /** @private {boolean} */
   this.quickRace = false;
 
-  /** @private {!Array<!monoid.Car>} */
+  /** @private {!Array.<!monoid.Car>} */
   this.cars_ = [];
 
   this.parseLog_(raceLog.split('\n'));
@@ -34,7 +34,7 @@ monoid.Race = function(raceLog) {
 var Race = monoid.Race;
 
 /** @private goog.log.Logger */
-Race.logger_ = new goog.log.getLogger('monoid.Race');
+Race.logger_ = goog.log.getLogger('monoid.Race');
 
 /**
  * @param {!Array.<string>} lines
@@ -55,7 +55,7 @@ Race.prototype.parseLog_ = function(lines) {
 
 
 /**
- * @param {object} msg
+ * @param {GenericMessage} msg
  * @param {number} timestamp
  */
 Race.prototype.parseInput = function(msg, timestamp) {
@@ -67,11 +67,15 @@ Race.prototype.parseInput = function(msg, timestamp) {
     this.setPositionsAt(msg.data, msg.gameTick);
     break;
    default:
-    goog.log.info(Race.logger_, 'Unknown message type: ' + msg.msgType, msg);
+    goog.log.info(Race.logger_, 'Unknown message type: ' + msg.msgType);
   }
 };
 
 
+/**
+ * @param {RaceMessage} race
+ * @param {number} timestamp
+ */
 Race.prototype.gameInit = function(race, timestamp) {
   this.track_ = new monoid.Track(race.track);
   for (var i = 0; i < race.cars.length; i++) {
@@ -84,7 +88,7 @@ Race.prototype.gameInit = function(race, timestamp) {
 
 
 /**
- * @param {!Array<object>} positions
+ * @param {!Array.<Object>} positions
  * @param {number} gameTick
  */
 Race.prototype.setPositionsAt = function(positions, gameTick) {
@@ -93,7 +97,7 @@ Race.prototype.setPositionsAt = function(positions, gameTick) {
 
 
 /**
- * @param {object} msg
+ * @param {Object} msg
  * @param {number} timestamp
  */
 Race.prototype.parseOutput = function(msg, timestamp) {
