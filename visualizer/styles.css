@@ -1,0 +1,13 @@
+@CHARSET "ISO-8859-1";
+
+#canvasdiv {
+	box-sizing: border-box;
+	padding: 50px;
+	width: 100%;
+	height: 500px;
+}
+canvas {
+	width: 100%;
+	height: 100%;
+	border: 1px solid black;
+}
