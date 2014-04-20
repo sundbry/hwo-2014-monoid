@@ -71,6 +71,6 @@ LoadRaceButton.prototype.handleInputChanged_ = function(e) {
 LoadRaceButton.prototype.handleLoad_ = function(e) {
   var file = this.fileReader_.getResult();
   var race = new monoid.Race(/** @type{string} */(file));
-  this.raceView_.displayRace(race);
+  this.raceView_.setRace(race);
 };
 });

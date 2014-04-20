@@ -17,6 +17,9 @@ monoid.RaceView = function() {
 
   /** @type {monoid.Race} */
   this.race_ = null;
+
+  /** @type {monoid.RaceMap} */
+  this.map_ = null;
 };
 var RaceView = monoid.RaceView;
 goog.inherits(RaceView, goog.ui.Component);
@@ -29,16 +32,21 @@ RaceView.prototype.createDom = function() {
   var element = this.getElement();
   goog.dom.classlist.add(element, 'race-view');
 
-  var map = new monoid.RaceMap();
-  map.render(element);
+  this.map_ = new monoid.RaceMap();
+  this.map_.render(element);
+};
+
+
+RaceView.prototype.draw = function() {
+  this.map_.draw();
 };
 
 
 /**
  * @param {monoid.Race} race
  */
-RaceView.prototype.displayRace = function(race) {
+RaceView.prototype.setRace = function(race) {
   this.race_ = race;
-  // TODO: Draw.
+  this.draw();
 };
 });
