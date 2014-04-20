@@ -112,10 +112,10 @@ TrackPiece.prototype.getEndPosition = function() {
     this.endPos_.angle = this.startPos_.angle;
   } else {
     var center = this.getCenterPosition();
-    var angle = center.angle - this.bendAngle_;
+    var angle = center.angle + this.bendAngle_;
     this.endPos_.x = center.x + this.radius_ * Math.sin(angle);
     this.endPos_.y = center.y - this.radius_ * Math.cos(angle);
-    this.endPos_.angle = angle - signum(this.bendAngle_)*Math.PI/2;
+    this.endPos_.angle = this.startPos_.angle + this.bendAngle_;
   }
 
   return this.endPos_;
