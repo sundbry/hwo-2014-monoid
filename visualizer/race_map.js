@@ -59,8 +59,13 @@ RaceMap.prototype.drawTrackPiece_ = function(piece) {
   } else {
     var center = piece.getCenterPosition();
     this.context_.beginPath();
-    this.context_.arc(this.scale_ * center.x, this.scale_ * center.y, this.scale_ * piece.getRadius(),
-        center.angle - Math.PI/2, center.angle + piece.getBendAngle() - Math.PI/2);
+    this.context_.arc(
+        this.scale_ * center.x,
+        this.scale_ * center.y,
+        this.scale_ * piece.getRadius(),
+        center.angle - Math.PI/2,
+        center.angle + piece.getBendAngle() - Math.PI/2,
+        piece.getBendAngle() < 0);
     this.context_.stroke();
   }
 };
