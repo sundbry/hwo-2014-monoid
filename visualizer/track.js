@@ -9,7 +9,7 @@ goog.scope(function() {
  * @returns {number}
  */
 var signum = function(num) {
-  return num > 0 ? 1 : 0;
+  return num > 0 ? 1 : -1;
 };
 
 
@@ -28,8 +28,8 @@ monoid.Track = function(track) {
   /** @private {Array.<TrackPiece>} */
   this.pieces_ = [];
   var lastPos = new Position(track.startingPoint);
-  lastPos.x = 500;
-  lastPos.y = 500;
+  lastPos.x = 600;
+  lastPos.y = 200;
   for (var i = 0; i < track.pieces.length; i++) {
     this.pieces_.push(new monoid.TrackPiece(track.pieces[i], lastPos));
     lastPos = this.pieces_[i].getEndPosition();
