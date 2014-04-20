@@ -18,12 +18,23 @@ function TrackMessage(){};
 TrackMessage.prototype.id;
 /** @type {string} */
 TrackMessage.prototype.name;
-/** @type {Array.<{length: number, switch: boolean, radius: number, angle: number}>} */
+/** @type {Array.<PieceMessage>} */
 TrackMessage.prototype.pieces;
 /** @type {Array.<{distanceFromCenter: number, index: number}>} */
 TrackMessage.prototype.lanes;
-/** @type {{position: {x: number, y: number}, angle: number}} */
+/** @type {PiecePosition} */
 TrackMessage.prototype.startingPoint;
+
+/** @constructor */
+function PieceMessage(){}
+/** @type {number} */
+PieceMessage.prototype.length;
+/** @type {boolean} */
+PieceMessage.prototype.switch;
+/** @type {number} */
+PieceMessage.prototype.radius;
+/** @type {number} */
+PieceMessage.prototype.angle;
 
 /** @constructor */
 function GenericMessage(){};
@@ -33,3 +44,10 @@ GenericMessage.prototype.data;
 GenericMessage.prototype.msgType;
 /** @type {number} */
 GenericMessage.prototype.gameTick;
+
+/** @constructor */
+function PiecePosition(){};
+/** @type {{x: number, y: number}} */
+PiecePosition.prototype.position;
+/** @type {number} */
+PiecePosition.prototype.angle;
