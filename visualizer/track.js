@@ -4,6 +4,15 @@ goog.provide('monoid.TrackPiece');
 goog.scope(function() {
 
 
+/**
+ * @param {number} num
+ * @returns {number}
+ */
+var signum = function(num) {
+  return num > 0 ? 1 : 0;
+};
+
+
 
 /**
  * @param {TrackMessage} track
@@ -19,8 +28,8 @@ monoid.Track = function(track) {
   /** @private {Array.<TrackPiece>} */
   this.pieces_ = [];
   var lastPos = new Position(track.startingPoint);
-  lastPos.x = 100;
-  lastPos.y = 100;
+  lastPos.x = 500;
+  lastPos.y = 500;
   for (var i = 0; i < track.pieces.length; i++) {
     this.pieces_.push(new monoid.TrackPiece(track.pieces[i], lastPos));
     lastPos = this.pieces_[i].getEndPosition();
@@ -59,6 +68,9 @@ monoid.TrackPiece = function(piece, startPos) {
 
   /** @type {Position} */
   this.endPos_ = null;
+
+  /** @type {Position} */
+  this.centerPos_ = null;
 };
 var TrackPiece = monoid.TrackPiece;
 
@@ -70,6 +82,23 @@ TrackPiece.prototype.isStraight = function() {
   return (this.length_ !== undefined) ? true : false;
 };
 
+
+/**
+ * @returns {number}
+ */
+TrackPiece.prototype.getRadius = function() {
+  return this.radius_;
+};
+
+
+/**
+ * @returns {number}
+ */
+TrackPiece.prototype.getBendAngle = function() {
+  return this.bendAngle_;
+};
+
+
 /**
  * @returns {Position}
  */
@@ -79,11 +108,33 @@ TrackPiece.prototype.getEndPosition = function() {
 
   if (this.isStraight()) {
     this.endPos_.x = this.startPos_.x + this.length_ * Math.sin(this.startPos_.angle);
-    this.endPos_.y = this.startPos_.y + this.length_ * Math.cos(this.startPos_.angle);
+    this.endPos_.y = this.startPos_.y - this.length_ * Math.cos(this.startPos_.angle);
     this.endPos_.angle = this.startPos_.angle;
+  } else {
+    var center = this.getCenterPosition();
+    var angle = center.angle - this.bendAngle_;
+    this.endPos_.x = center.x + this.radius_ * Math.sin(angle);
+    this.endPos_.y = center.y - this.radius_ * Math.cos(angle);
+    this.endPos_.angle = angle - signum(this.bendAngle_)*Math.PI/2;
   }
 
   return this.endPos_;
+};
+
+
+/**
+ * The angle of the center position is the angle from the start position to it.
+ * @returns {Position}
+ */
+TrackPiece.prototype.getCenterPosition = function() {
+  if (this.isStraight()) return null;
+  if (this.centerPos_ != null) return this.centerPos_;
+  this.centerPos_ = new Position();
+
+  this.centerPos_.angle = this.startPos_.angle + signum(this.bendAngle_)*Math.PI/2;
+  this.centerPos_.x = this.startPos_.x + this.radius_ * Math.sin(this.centerPos_.angle);
+  this.centerPos_.y = this.startPos_.y - this.radius_ * Math.cos(this.centerPos_.angle);
+  return this.centerPos_;
 };
 
 
