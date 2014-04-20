@@ -93,13 +93,17 @@ RaceMap.prototype.setRace = function(race) {
 
   // Translate and scale so we can fit the track nicely.
   var dimensions = race.getTrack().getDimensions();
-  var scaleFactor = Math.min(RaceMap.WIDTH / dimensions.w,
-                             RaceMap.HEIGHT / dimensions.h);
+  var scaleWidth = RaceMap.WIDTH / dimensions.w;
+  var scaleHeight = RaceMap.HEIGHT / dimensions.h;
+  var scaleFactor = Math.min(scaleWidth, scaleHeight);
   this.context_.scale(scaleFactor / this.scale_, scaleFactor / this.scale_);
   this.scale_ = scaleFactor;
-  this.context_.translate(-dimensions.x + this.translateX_,
-                          -dimensions.y + this.translateY_);
-  this.translateX_ = -dimensions.x;
-  this.translateY_ = -dimensions.y;
+
+  var transX = -dimensions.x + dimensions.w/2 * (scaleWidth/scaleFactor - 1);
+  var transY = -dimensions.y + dimensions.h/2 * (scaleHeight/scaleFactor - 1);
+  this.context_.translate(transX - this.translateX_,
+                          transY - this.translateY_);
+  this.translateX_ = transX;
+  this.translateY_ = transY;
 };
 });
