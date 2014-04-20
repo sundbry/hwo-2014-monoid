@@ -97,6 +97,14 @@ Race.prototype.setPositionsAt = function(positions, gameTick) {
 
 
 /**
+ * @returns {monoid.Track}
+ */
+Race.prototype.getTrack = function() {
+  return this.track_;
+};
+
+
+/**
  * @param {Object} msg
  * @param {number} timestamp
  */

@@ -47,6 +47,7 @@ RaceView.prototype.draw = function() {
  */
 RaceView.prototype.setRace = function(race) {
   this.race_ = race;
+  this.map_.setRace(race);
   this.draw();
 };
 });

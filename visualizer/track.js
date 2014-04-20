@@ -21,7 +21,15 @@ monoid.Track = function(track) {
     this.pieces_.push(new monoid.TrackPiece(track.pieces[i]));
   }
 };
+var Track = monoid.Track;
 
+
+/**
+ * @returns {Array.<monoid.TrackPiece>}
+ */
+Track.prototype.getPieces = function() {
+  return this.pieces_;
+};
 
 /** @constructor */
 monoid.TrackPiece = function(piece) {
