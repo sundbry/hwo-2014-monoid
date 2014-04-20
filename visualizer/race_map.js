@@ -19,15 +19,31 @@ monoid.RaceMap = function() {
   /** @type {monoid.Race} */
   this.race_ = null;
 
-  this.scale_ = 0.3;
+  /** @type {number} */
+  this.scale_ = 1;
+
+  /** @type {number} */
+  this.translateX_ = 0;
+
+  /** @type {number} */
+  this.translateY_ = 0;
 };
 var RaceMap = monoid.RaceMap;
 goog.inherits(RaceMap, goog.ui.Component);
 
 
+/** @const {number} */
+RaceMap.WIDTH = 800;
+
+/** @const {number} */
+RaceMap.HEIGHT = 400;
+
+
 /** @override */
 RaceMap.prototype.createDom = function() {
-  this.setElementInternal(this.dom_.createDom('canvas', {width: 800, height: 400}));
+  this.setElementInternal(
+      this.dom_.createDom('canvas',
+                          {width: RaceMap.WIDTH, height: RaceMap.HEIGHT}));
   this.context_ = this.getElement().getContext('2d');
 };
 
@@ -53,16 +69,14 @@ RaceMap.prototype.drawTrackPiece_ = function(piece) {
     var startPos = piece.getStartPosition();
     var endPos = piece.getEndPosition();
     this.context_.beginPath();
-    this.context_.moveTo(this.scale_ * startPos.x, this.scale_ * startPos.y);
-    this.context_.lineTo(this.scale_ * endPos.x, this.scale_ * endPos.y);
+    this.context_.moveTo(startPos.x, startPos.y);
+    this.context_.lineTo(endPos.x, endPos.y);
     this.context_.stroke();
   } else {
     var center = piece.getCenterPosition();
     this.context_.beginPath();
     this.context_.arc(
-        this.scale_ * center.x,
-        this.scale_ * center.y,
-        this.scale_ * piece.getRadius(),
+        center.x, center.y, piece.getRadius(),
         center.angle - Math.PI/2,
         center.angle + piece.getBendAngle() - Math.PI/2,
         piece.getBendAngle() < 0);
@@ -76,5 +90,16 @@ RaceMap.prototype.drawTrackPiece_ = function(piece) {
  */
 RaceMap.prototype.setRace = function(race) {
   this.race_ = race;
+
+  // Translate and scale so we can fit the track nicely.
+  var dimensions = race.getTrack().getDimensions();
+  var scaleFactor = Math.min(RaceMap.WIDTH / dimensions.w,
+                             RaceMap.HEIGHT / dimensions.h);
+  this.context_.scale(scaleFactor / this.scale_, scaleFactor / this.scale_);
+  this.scale_ = scaleFactor;
+  this.context_.translate(-dimensions.x + this.translateX_,
+                          -dimensions.y + this.translateY_);
+  this.translateX_ = -dimensions.x;
+  this.translateY_ = -dimensions.y;
 };
 });

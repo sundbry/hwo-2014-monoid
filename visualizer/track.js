@@ -28,14 +28,44 @@ monoid.Track = function(track) {
   /** @private {Array.<TrackPiece>} */
   this.pieces_ = [];
   var lastPos = new Position(track.startingPoint);
-  lastPos.x = 600;
-  lastPos.y = 200;
   for (var i = 0; i < track.pieces.length; i++) {
     this.pieces_.push(new monoid.TrackPiece(track.pieces[i], lastPos));
     lastPos = this.pieces_[i].getEndPosition();
   }
 };
 var Track = monoid.Track;
+
+
+/**
+ * Calculate the minimum coordinates that need to be visible to view the entire
+ * track.
+ * @returns {{x: number, y: number, w: number, h: number}}
+ */
+Track.prototype.getDimensions = function() {
+  var pos = this.pieces_[0].getStartPosition();
+  var minX = pos.x;
+  var maxX = pos.x;
+  var minY = pos.y;
+  var maxY = pos.y;
+  for (var i = 0; i < this.pieces_.length; i++) {
+    var piece = this.pieces_[i];
+    if (piece.isStraight()) {
+      var start = piece.getStartPosition();
+      var end = piece.getEndPosition();
+      minX = Math.min(minX, Math.min(start.x, end.x));
+      maxX = Math.max(maxX, Math.max(start.x, end.x));
+      minY = Math.min(minY, Math.min(start.y, end.y));
+      maxY = Math.max(maxY, Math.max(start.y, end.y));
+    } else {
+      var center = piece.getCenterPosition();
+      minX = Math.min(minX, center.x - piece.getRadius());
+      maxX = Math.max(maxX, center.x + piece.getRadius());
+      minY = Math.min(minY, center.y - piece.getRadius());
+      maxY = Math.max(maxY, center.y + piece.getRadius());
+    }
+  }
+  return {x: minX, y: minY, w: maxX - minX, h: maxY - minY};
+};
 
 
 /**
