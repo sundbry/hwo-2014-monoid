@@ -123,7 +123,7 @@ TrackPiece.prototype.getEndPosition = function() {
 
 
 /**
- * The angle of the center position is the angle from the start position to it.
+ * The angle of the center position is the angle from it to the start position.
  * @returns {Position}
  */
 TrackPiece.prototype.getCenterPosition = function() {
@@ -131,9 +131,9 @@ TrackPiece.prototype.getCenterPosition = function() {
   if (this.centerPos_ != null) return this.centerPos_;
   this.centerPos_ = new Position();
 
-  this.centerPos_.angle = this.startPos_.angle + signum(this.bendAngle_)*Math.PI/2;
-  this.centerPos_.x = this.startPos_.x + this.radius_ * Math.sin(this.centerPos_.angle);
-  this.centerPos_.y = this.startPos_.y - this.radius_ * Math.cos(this.centerPos_.angle);
+  this.centerPos_.angle = this.startPos_.angle + signum(this.bendAngle_)*Math.PI/2 + Math.PI;
+  this.centerPos_.x = this.startPos_.x - this.radius_ * Math.sin(this.centerPos_.angle);
+  this.centerPos_.y = this.startPos_.y + this.radius_ * Math.cos(this.centerPos_.angle);
   return this.centerPos_;
 };
 

@@ -19,7 +19,7 @@ monoid.RaceMap = function() {
   /** @type {monoid.Race} */
   this.race_ = null;
 
-  this.scale_ = 0.2;
+  this.scale_ = 0.3;
 };
 var RaceMap = monoid.RaceMap;
 goog.inherits(RaceMap, goog.ui.Component);
@@ -57,12 +57,10 @@ RaceMap.prototype.drawTrackPiece_ = function(piece) {
     this.context_.lineTo(this.scale_ * endPos.x, this.scale_ * endPos.y);
     this.context_.stroke();
   } else {
-    var startPos = piece.getStartPosition();
     var center = piece.getCenterPosition();
     this.context_.beginPath();
-    this.context_.moveTo(this.scale_ * startPos.x, this.scale_ * startPos.y);
     this.context_.arc(this.scale_ * center.x, this.scale_ * center.y, this.scale_ * piece.getRadius(),
-        -center.angle, -center.angle + piece.getBendAngle());
+        center.angle - Math.PI/2, center.angle + piece.getBendAngle() - Math.PI/2);
     this.context_.stroke();
   }
 };
