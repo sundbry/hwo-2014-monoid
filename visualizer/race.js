@@ -95,9 +95,10 @@ Race.prototype.gameInit = function(race, timestamp) {
  * @param {number} gameTick
  */
 Race.prototype.setPositionsAt = function(positions, gameTick) {
-  // We get one of these before the game starts and after it ends, with
-  // no gameTick set. Ignore those.
-  if (!gameTick) return;
+  // We get a position without a game tick before the game starts
+  // as well as after it ends. Set tick 0 position for the first case.
+  if (!gameTick && this.totalTicks_ == 0) gameTick = 0;
+  if (gameTick === undefined) return;
 
   this.totalTicks_ = Math.max(this.totalTicks_, gameTick);
   for (var i = 0; i < positions.length; i++) {

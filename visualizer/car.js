@@ -43,10 +43,10 @@ Car.prototype.getColor = function() {
 
 /**
  * @param {number} tick
- * @returns {{x: number, y: number}}
+ * @returns {Car.Position}
  */
 Car.prototype.getPositionAtTick = function(tick) {
-  return {x: -100, y: -100};
+  return this.positions_[tick];
 };
 
 
@@ -62,17 +62,27 @@ Car.prototype.getId = function() {
 /**
  * @param {CarPositionMessage} position
  * @param {!Array.<monoid.TrackPiece>} pieces
+ * @struct
  * @constructor
  */
 Car.Position = function(position, pieces) {
   /** @type {number} */
-  this.angle_ = position.angle;
-
-  /** @type {monoid.TrackPiece} */
-  this.piece_ = pieces[position.piecePosition.pieceIndex];
+  this.angle = position.angle;
 
   /** @type {number} */
-  this.distance_ = position.piecePosition.inPieceDistance;
+  this.x = 0;
+
+  /** @type {number} */
+  this.y = 0;
+
+  var piece = pieces[position.piecePosition.pieceIndex];
+  var dist = position.piecePosition.inPieceDistance;
+
+  if (piece.isStraight()) {
+    var pos = piece.getStartPosition();
+    this.x = pos.x + dist * Math.sin(pos.angle);
+    this.y = pos.y - dist * Math.cos(pos.angle);
+  }
 };
 var Position = Car.Position;
 
