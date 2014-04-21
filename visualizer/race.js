@@ -29,6 +29,9 @@ monoid.Race = function(raceLog) {
   /** @private {!Array.<!monoid.Car>} */
   this.cars_ = [];
 
+  /** @private */
+  this.totalTicks_ = 0;
+
   this.parseLog_(raceLog.split('\n'));
 };
 var Race = monoid.Race;
@@ -92,6 +95,11 @@ Race.prototype.gameInit = function(race, timestamp) {
  * @param {number} gameTick
  */
 Race.prototype.setPositionsAt = function(positions, gameTick) {
+  // We get one of these before the game starts and after it ends, with
+  // no gameTick set. Ignore those.
+  if (!gameTick) return;
+
+  this.totalTicks_ = Math.max(this.totalTicks_, gameTick);
   for (var i = 0; i < positions.length; i++) {
     var id = new monoid.Car.Id(positions[i].id);
     var car = this.findCar(id);
@@ -113,6 +121,14 @@ Race.prototype.findCar = function(id) {
     if (this.cars_[i].getId().equals(id)) return this.cars_[i];
   }
   return null;
+};
+
+
+/**
+ * @returns {number}
+ */
+Race.prototype.getTotalGameTicks = function() {
+  return this.totalTicks_;
 };
 
 

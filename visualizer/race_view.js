@@ -41,7 +41,7 @@ RaceView.prototype.createDom = function() {
   this.map_ = new monoid.RaceMap();
   this.map_.render(element);
 
-  this.slider_ = this.dom_.createDom('input', {type: 'range'});
+  this.slider_ = this.dom_.createDom('input', {type: 'range', min: '0', max: '0', step: '1'});
   goog.dom.classlist.add(this.slider_, 'game-tick-slider');
   this.dom_.appendChild(element, this.slider_);
 };
@@ -58,6 +58,7 @@ RaceView.prototype.draw = function() {
 RaceView.prototype.setRace = function(race) {
   this.race_ = race;
   this.map_.setRace(race);
+  this.slider_.max = race.getTotalGameTicks();
   this.draw();
 };
 });
