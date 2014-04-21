@@ -25,7 +25,7 @@ monoid.Track = function(track) {
   /** @private {string} */
   this.name_ = track.name;
 
-  /** @private {Array.<TrackPiece>} */
+  /** @private {!Array.<TrackPiece>} */
   this.pieces_ = [];
   var lastPos = new Position(track.startingPoint);
   for (var i = 0; i < track.pieces.length; i++) {
@@ -69,7 +69,7 @@ Track.prototype.getDimensions = function() {
 
 
 /**
- * @returns {Array.<monoid.TrackPiece>}
+ * @returns {!Array.<monoid.TrackPiece>}
  */
 Track.prototype.getPieces = function() {
   return this.pieces_;

@@ -88,11 +88,31 @@ Race.prototype.gameInit = function(race, timestamp) {
 
 
 /**
- * @param {!Array.<Object>} positions
+ * @param {!Array.<CarPositionMessage>} positions
  * @param {number} gameTick
  */
 Race.prototype.setPositionsAt = function(positions, gameTick) {
-  // TODO: Set positions at the given game tick.
+  for (var i = 0; i < positions.length; i++) {
+    var id = new monoid.Car.Id(positions[i].id);
+    var car = this.findCar(id);
+    if (car) {
+      car.setPositionAt(positions[i], gameTick, this.track_.getPieces());
+    } else {
+      goog.log.warning(Race.logger_, 'Can\' find car with id: '+id);
+    }
+  }
+};
+
+
+/**
+ * @param {monoid.Car.Id} id
+ * @returns {monoid.Car}
+ */
+Race.prototype.findCar = function(id) {
+  for (var i = 0; i < this.cars_.length; i++) {
+    if (this.cars_[i].getId().equals(id)) return this.cars_[i];
+  }
+  return null;
 };
 
 

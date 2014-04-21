@@ -11,6 +11,17 @@ RaceMessage.prototype.raceSession;
 
 /** @constructor */
 function CarMessage(){};
+/** @type {CarIdMessage} */
+CarMessage.prototype.id;
+/** @type {{length: number, width: number, guideFlagPosition: number}} */
+CarMessage.prototype.dimensions;
+
+/** @constructor */
+function CarIdMessage(){};
+/** @type {string} */
+CarIdMessage.prototype.name;
+/** @type {string} */
+CarIdMessage.prototype.color;
 
 /** @constructor */
 function TrackMessage(){};
@@ -51,3 +62,15 @@ function PiecePosition(){};
 PiecePosition.prototype.position;
 /** @type {number} */
 PiecePosition.prototype.angle;
+
+/** @constructor */
+function CarPositionMessage(){};
+/** @type {CarIdMessage} */
+CarPositionMessage.prototype.id;
+/** @type {number} */
+CarPositionMessage.prototype.angle;
+/** @type {{pieceIndex: number,
+ *          inPieceDistance: number,
+ *          lane: {startLaneIndex: number, endLaneIndex: number},
+ *          lap: number}} */
+CarPositionMessage.prototype.piecePosition;
