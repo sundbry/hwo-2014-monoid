@@ -1,6 +1,7 @@
 goog.provide('monoid.RaceView');
 
 goog.require('goog.dom.classlist');
+goog.require('goog.events');
 goog.require('goog.ui.Component');
 goog.require('monoid.RaceMap');
 
@@ -44,11 +45,22 @@ RaceView.prototype.createDom = function() {
   this.slider_ = this.dom_.createDom('input', {type: 'range', min: '0', max: '0', step: '1'});
   goog.dom.classlist.add(this.slider_, 'game-tick-slider');
   this.dom_.appendChild(element, this.slider_);
+  this.getHandler().listen(this.slider_, goog.events.EventType.INPUT,
+                           this.handleSliderChanged_);
 };
 
 
-RaceView.prototype.draw = function() {
+RaceView.prototype.update = function() {
   this.map_.draw(this.gameTick_);
+};
+
+
+/**
+ * @param {goog.events.BrowserEvent} e
+ */
+RaceView.prototype.handleSliderChanged_ = function(e) {
+  this.gameTick_ = this.slider_.value;
+  this.update();
 };
 
 
@@ -59,6 +71,6 @@ RaceView.prototype.setRace = function(race) {
   this.race_ = race;
   this.map_.setRace(race);
   this.slider_.max = race.getTotalGameTicks();
-  this.draw();
+  this.update();
 };
 });

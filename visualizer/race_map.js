@@ -52,6 +52,21 @@ RaceMap.prototype.createDom = function() {
  * @param {number} currentTick
  */
 RaceMap.prototype.draw = function(currentTick) {
+  // Clear canvas.
+  this.getElement().width = RaceMap.WIDTH;
+
+  // Translate and scale so we can fit the track nicely.
+  var dimensions = this.race_.getTrack().getDimensions();
+  var scaleWidth = RaceMap.WIDTH / dimensions.w;
+  var scaleHeight = RaceMap.HEIGHT / dimensions.h;
+  var scaleFactor = Math.min(scaleWidth, scaleHeight);
+  this.context_.scale(scaleFactor, scaleFactor);
+
+  var transX = -dimensions.x + dimensions.w/2 * (scaleWidth/scaleFactor - 1);
+  var transY = -dimensions.y + dimensions.h/2 * (scaleHeight/scaleFactor - 1);
+  this.context_.translate(transX, transY);
+
+  // Now we're ready to draw.
   this.drawTrack_();
   this.drawCars_(currentTick);
 };
@@ -109,20 +124,5 @@ RaceMap.prototype.drawTrackPiece_ = function(piece) {
  */
 RaceMap.prototype.setRace = function(race) {
   this.race_ = race;
-
-  // Translate and scale so we can fit the track nicely.
-  var dimensions = race.getTrack().getDimensions();
-  var scaleWidth = RaceMap.WIDTH / dimensions.w;
-  var scaleHeight = RaceMap.HEIGHT / dimensions.h;
-  var scaleFactor = Math.min(scaleWidth, scaleHeight);
-  this.context_.scale(scaleFactor / this.scale_, scaleFactor / this.scale_);
-  this.scale_ = scaleFactor;
-
-  var transX = -dimensions.x + dimensions.w/2 * (scaleWidth/scaleFactor - 1);
-  var transY = -dimensions.y + dimensions.h/2 * (scaleHeight/scaleFactor - 1);
-  this.context_.translate(transX - this.translateX_,
-                          transY - this.translateY_);
-  this.translateX_ = transX;
-  this.translateY_ = transY;
 };
 });
