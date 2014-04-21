@@ -45,7 +45,7 @@
 
 (defmethod handle-msg "gameInit" [msg racer]
   (log/debug "Race initialized.")
-  (go (>! (:input-chan (:track racer)) (:track (:data msg)))) 
+  (load-track (:track racer) (:track (:data msg)))
   racer)
 
 (defmethod handle-msg "gameStart" [msg racer]
@@ -65,8 +65,8 @@
   racer)
 
 (defmethod handle-msg "carPositions" [msg racer]
-  (go (>! (:input-chan (:track racer) (:data msg))) ; send position data to the track
-      (>! (:input-chan (:dashboard racer)) (:data msg))) ; send position data to dashboard
+  (update-positions (:track racer) (:data msg))
+  (update-positions (:dashboard racer))
   racer)
 
 (defmethod handle-msg "crash" [msg racer]

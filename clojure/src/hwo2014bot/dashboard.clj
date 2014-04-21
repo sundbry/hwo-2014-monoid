@@ -17,18 +17,19 @@
           (alter (:state-buf dash) #(conj % 
         (recur (<!! (:input-chan dash)))))))
 
-(defrecord Dashboard [config state-buf input-chan tracer proc] ; tracer gets injected 
+(defrecord Dashboard [track tracer config output-chan state-buf] ; tracer, track injected 
   component/Lifecycle
   
   (start [this]
     (log/debug "Starting dashboard")
-    (assoc this :proc (new-dash-thread this)))
+    (go-loop []
+      (when-let [track (<! (:output-chan track))]
+        (let [track-pos
   
   (stop [this]
     (log/debug "Stopping dashboard")
     (close! input-chan)
-    (<!! proc) ; block until main loop closes
-    (assoc this :proc nil))
+    this)
   
   PReader
   (read [this]
@@ -39,7 +40,7 @@
 (defn new-dashboard [dash-conf]
   (map->Dashboard
     {:config dash-conf
-     :input-chan (chan)
+     :output-chan (chan)
      :state-buf (ref (cbuf (:buffer dash-conf) :direction :right))}))
   
   #_{:tick -1

@@ -6,3 +6,6 @@
 
 (defprotocol PTick
   (tick [_ tick-num]))
+
+(defprotocol PTrack
+  (load-track [_ track-data]))
