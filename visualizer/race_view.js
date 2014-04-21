@@ -48,7 +48,7 @@ RaceView.prototype.createDom = function() {
 
 
 RaceView.prototype.draw = function() {
-  this.map_.draw();
+  this.map_.draw(this.gameTick_);
 };
 
 

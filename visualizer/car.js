@@ -33,6 +33,26 @@ Car.prototype.setPositionAt = function(position, gameTick, pieces) {
 };
 
 
+/**
+ * @returns {string} color
+ */
+Car.prototype.getColor = function() {
+  return this.id_.color_;
+};
+
+
+/**
+ * @param {number} tick
+ * @returns {{x: number, y: number}}
+ */
+Car.prototype.getPositionAtTick = function(tick) {
+  return {x: -100, y: -100};
+};
+
+
+/**
+ * @returns {Car.Id}
+ */
 Car.prototype.getId = function() {
   return this.id_;
 };

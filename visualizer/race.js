@@ -141,6 +141,14 @@ Race.prototype.getTrack = function() {
 
 
 /**
+ * @returns {!Array.<!monoid.Car>}
+ */
+Race.prototype.getCars = function() {
+  return this.cars_;
+};
+
+
+/**
  * @param {Object} msg
  * @param {number} timestamp
  */

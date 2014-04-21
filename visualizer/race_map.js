@@ -48,8 +48,12 @@ RaceMap.prototype.createDom = function() {
 };
 
 
-RaceMap.prototype.draw = function() {
+/**
+ * @param {number} currentTick
+ */
+RaceMap.prototype.draw = function(currentTick) {
   this.drawTrack_();
+  this.drawCars_(currentTick);
 };
 
 
@@ -57,6 +61,21 @@ RaceMap.prototype.drawTrack_ = function() {
   var trackPieces = this.race_.getTrack().getPieces();
   for (var i = 0; i < trackPieces.length; i++) {
     this.drawTrackPiece_(trackPieces[i]);
+  }
+};
+
+
+/**
+ * @param {number} currentTick
+ */
+RaceMap.prototype.drawCars_ = function(currentTick) {
+  var cars = this.race_.getCars();
+  for (var i = 0; i < cars.length; i++) {
+    var pos = cars[i].getPositionAtTick(currentTick);
+    this.context_.fillStyle = cars[i].getColor();
+    this.context_.beginPath();
+    this.context_.arc(pos.x, pos.y, 10, 0, Math.PI*2);
+    this.context_.fill();
   }
 };
 
