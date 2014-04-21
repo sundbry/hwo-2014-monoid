@@ -82,6 +82,12 @@ Car.Position = function(position, pieces) {
     var pos = piece.getStartPosition();
     this.x = pos.x + dist * Math.sin(pos.angle);
     this.y = pos.y - dist * Math.cos(pos.angle);
+  } else {
+    var pos = piece.getCenterPosition();
+    var radius = piece.getRadius();
+    var angle = pos.angle + (piece.getBendAngle() > 0 ? 1 : -1) * dist / radius;
+    this.x = pos.x + radius * Math.sin(angle);
+    this.y = pos.y - radius * Math.cos(angle);
   }
 };
 var Position = Car.Position;
