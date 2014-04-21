@@ -20,6 +20,12 @@ monoid.RaceView = function() {
 
   /** @type {monoid.RaceMap} */
   this.map_ = null;
+
+  /** @type {Element} */
+  this.slider_ = null;
+
+  /** @type {number} */
+  this.gameTick_ = 0;
 };
 var RaceView = monoid.RaceView;
 goog.inherits(RaceView, goog.ui.Component);
@@ -34,6 +40,10 @@ RaceView.prototype.createDom = function() {
 
   this.map_ = new monoid.RaceMap();
   this.map_.render(element);
+
+  this.slider_ = this.dom_.createDom('input', {type: 'range'});
+  goog.dom.classlist.add(this.slider_, 'game-tick-slider');
+  this.dom_.appendChild(element, this.slider_);
 };
 
 
