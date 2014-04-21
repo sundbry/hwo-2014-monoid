@@ -1,0 +1,27 @@
+@CHARSET "ISO-8859-1";
+
+.race-view {
+	box-sizing: border-box;
+	padding: 50px;
+	width: 100%;
+	height: 500px;
+}
+canvas {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+	width: 800px;
+	height: 400px;
+	border: 1px solid black;
+}
+.game-tick-slider {
+	display: block;
+	width: 800px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.load-race-button-label {
+	display: inline;
+	margin-right: 5px;
+}
