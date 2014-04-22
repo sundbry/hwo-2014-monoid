@@ -3,6 +3,7 @@ goog.provide('monoid.RaceView');
 goog.require('goog.dom.classlist');
 goog.require('goog.events');
 goog.require('goog.ui.Component');
+goog.require('monoid.CarInfoView');
 goog.require('monoid.RaceMap');
 
 goog.scope(function() {
@@ -27,6 +28,12 @@ monoid.RaceView = function() {
 
   /** @type {number} */
   this.gameTick_ = 0;
+
+  /** @type {Array.<!monoid.CarInfoView>} */
+  this.carInfoViews_ = [];
+
+  /** @type {Element} */
+  this.carInfosDiv_ = null;
 };
 var RaceView = monoid.RaceView;
 goog.inherits(RaceView, goog.ui.Component);
@@ -40,6 +47,7 @@ RaceView.prototype.createDom = function() {
   goog.dom.classlist.add(element, 'race-view');
 
   this.map_ = new monoid.RaceMap();
+  this.registerDisposable(this.map_);
   this.map_.render(element);
 
   this.slider_ = this.dom_.createDom('input', {type: 'range', min: '0', max: '0', step: '1'});
@@ -47,11 +55,22 @@ RaceView.prototype.createDom = function() {
   this.dom_.appendChild(element, this.slider_);
   this.getHandler().listen(this.slider_, goog.events.EventType.INPUT,
                            this.handleSliderChanged_);
+
+  this.carInfosDiv_ = this.dom_.createDom('div', 'car-info-container');
+  this.dom_.appendChild(element, this.carInfosDiv_);
 };
 
 
-RaceView.prototype.update = function() {
+/**
+ * @param {number} gameTick
+ */
+RaceView.prototype.setGameTick = function(gameTick) {
+  this.gameTick_ = gameTick;
+  this.slider_.value = gameTick;
   this.map_.draw(this.gameTick_);
+  for (var i = 0; i < this.carInfoViews_.length; i++) {
+    this.carInfoViews_[i].setGameTick(gameTick);
+  }
 };
 
 
@@ -59,8 +78,7 @@ RaceView.prototype.update = function() {
  * @param {goog.events.BrowserEvent} e
  */
 RaceView.prototype.handleSliderChanged_ = function(e) {
-  this.gameTick_ = this.slider_.value;
-  this.update();
+  this.setGameTick(this.slider_.value);
 };
 
 
@@ -70,7 +88,29 @@ RaceView.prototype.handleSliderChanged_ = function(e) {
 RaceView.prototype.setRace = function(race) {
   this.race_ = race;
   this.map_.setRace(race);
+  this.clearCarInfoViews_();
+  var cars = race.getCars();
+  for (var i = 0; i < cars.length; i++) {
+    var view = new monoid.CarInfoView(cars[i]);
+    view.render(this.carInfosDiv_);
+    this.carInfoViews_.push(view);
+  }
   this.slider_.max = race.getTotalGameTicks();
-  this.update();
+  this.setGameTick(0);
+};
+
+
+/** @override */
+RaceView.prototype.disposeInternal = function() {
+  this.clearCarInfoViews_();
+  goog.base(this, 'disposeInternal');
+};
+
+
+RaceView.prototype.clearCarInfoViews_ = function() {
+  for (var i = 0; i < this.carInfoViews_.length; i++) {
+    this.carInfoViews_[i].dispose();
+  }
+  this.carInfoViews_ = [];
 };
 });

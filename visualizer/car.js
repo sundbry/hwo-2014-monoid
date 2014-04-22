@@ -51,6 +51,29 @@ Car.prototype.getPositionAtTick = function(tick) {
 
 
 /**
+ * @param {number} tick
+ * @returns {number}
+ */
+Car.prototype.getSpeedAtTick = function(tick) {
+  if (tick == 0) return 0;
+  // TODO: Use actual game piece position info instead of just physical location
+  var pos = this.getPositionAtTick(tick);
+  var lastPos = this.getPositionAtTick(tick-1);
+  return Math.sqrt((pos.x-lastPos.x)*(pos.x-lastPos.x) + (pos.y-lastPos.y)*(pos.y-lastPos.y));
+};
+
+
+/**
+ * @param {number} tick
+ * @returns {number}
+ */
+Car.prototype.getAccelAtTick = function(tick) {
+  if (tick == 0) return 0;
+  return this.getSpeedAtTick(tick) - this.getSpeedAtTick(tick-1);
+};
+
+
+/**
  * @returns {Car.Id}
  */
 Car.prototype.getId = function() {
