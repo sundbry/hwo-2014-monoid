@@ -38,14 +38,8 @@
   
   PTrace
   
-  ;; Trace messages coming into the bot
-  (in [this msg]
-    (send-off trace-agent (fn [fh] (trace-msg fh :in msg)))
-    this)
-  
-  ;; Trace messages coming from the bot
-  (out [this msg]
-    (send-off trace-agent (fn [fh] (trace-msg fh :out msg)))
+  (trace [this type-kw msg]
+    (send-off trace-agent (fn [fh] (trace-msg fh type-kw msg)))
     this)
     
 ) ; end record
@@ -56,8 +50,7 @@
   (stop [this] this)
   
   PTrace
-  (in [this msg] this)
-  (out [this msg] this)
+  (trace [this type-kw msg] this)
 ) ; end record
 
 (defn new-tracer [trace-conf]

@@ -1,6 +1,7 @@
 (ns hwo2014bot.track
   (:require [clojure.tools.logging :as log]
-            [[com.stuartsierra.component :as component]
+            [clojure.core.async :refer [chan go go-loop >! <! close!]]
+            [com.stuartsierra.component :as component]
             [hwo2014bot.protocol :refer :all]))
 
 (defn arc-length [radius angle-deg]
@@ -27,17 +28,17 @@
   (cond
     (:length piece) (straight-section section-offset piece)
     (:radius piece) (turn-section lane-offset section-offset piece)
-    (throw (ex-info "Invalid lane piece" piece))))
+    :else (throw (ex-info "Invalid lane piece" piece))))
 
 (defn build-lane [pieces-json lane-json]
   (let [lane-offset (:distanceFromCenter lane-json)]
-    (loop [sections (list)
+    (loop [sections (vector)
            section-offset 0.0
            pieces (seq pieces-json)]
       (if-let [piece (first pieces)]
         (let [next-section (build-lane-section lane-offset section-offset piece)]
           (recur (conj sections next-section)
-                 (:offset next-section)
+                 (+ (:offset next-section) (:length next-section))
                  (rest pieces)))
         sections))))
 
@@ -64,40 +65,79 @@
           (recur (cons tail-section sections)
                (:finish-offset tail-section)
                (rest rev-sections)))
-        sections)))
+        (vec sections)))) ; finally. convert to a vector for efficient random access
 
 (defn analyze-lanes [lanes]
   (map analyze-lane lanes))
 
-(defn setup-cars [car-data lanes]
+(defn setup-cars [car-data]
   (into {} (map
              (fn [car]
-               [(:name (:id car)) nil]))))
+               [(:name (:id car)) {:color (:color (:id car))}])
+             car-data)))
 
-(defrecord Track [input-chan output-chan lanes cars]
+(defn start-displacement [lane-sections piece-pos]
+  (if (<= (count lane-sections) (:section-index piece-pos))
+    0.0 ; they finished the race
+    (let [lane-section (nth lane-sections (:section-index piece-pos))]
+      (+ (:offset lane-section) (:section-displacement piece-pos)))))
+
+(defn convert-piece-position [pos-json lap-size]
+  "Convert a :piecePosition to a lane section position"
+  {:section-index (+ (* (:lap pos-json) lap-size)
+                     (:pieceIndex pos-json))
+   :section-displacement (:inPieceDistance pos-json)})
+
+(defn update-cars [prev-positions track-state new-positions]
+  (into {} (map
+             (fn [car]
+               (let [pos (:piecePosition car)
+                     lane (:lane pos)]
+                 [(:name (:id car))
+                  {:angle (:angle car)
+                   :lane (/ (+ (:startLaneIndex lane) (:endLaneIndex lane)) 2)
+                   :start-displacement (start-displacement (nth (:lanes track-state) (:startLaneIndex lane))
+                                                           (convert-piece-position pos (:lap-size track-state)))
+                   ;:finish-displacement (finish-displacement (nth lanes (:endLaneIndex lane)) pos)
+                   }]))
+               new-positions)))
+
+(defrecord RaceTrack [tracer input-chan output-chan state]
   component/Lifecycle
   
   (start [this] 
-    (go-loop []
-      (if-let [positions (<! input-chan)]
-        (do
-          (dosync
-            (alter cars update-cars @lanes position-data)))
-          (>! output-chan (update-track @track-state positions)
-          (recur))
-        (close! output-chan)))        
+    (go (try (loop []
+      (when-let [position-data (<! input-chan)]
+        (let [track-state
+              (dosync
+                (alter state update-in [:tick] inc)
+                (alter state
+                       (fn [cur-state]
+                         (update-in cur-state [:cars] update-cars cur-state position-data))))]
+          (>! output-chan track-state))
+        (recur)))
+      (catch Exception e
+        (log/error e "Race track error"))))
     this)
            
   (stop [this]     
-    (close! input-chan)
+    (close! output-chan)
     this)
   
-  PTrack
+  PRaceTrack
   
-  (load-race [this race-data]
-    (dosync
-      (ref-set lanes (analyze-lanes (build-lanes (:track data) (:laps (:raceSession data)))))
-      (ref-set cars (setup-cars (:cars data) @lanes)))
+  (load-race [this data]
+    (let [lanes (vec (analyze-lanes (build-lanes (:track data) (:laps (:raceSession data)))))]
+      (dosync
+        (ref-set state
+                 {:tick -1
+                  :lanes lanes
+                  :cars (setup-cars (:cars data))
+                  :lap-size (count (:pieces (:track data)))}))
+      (trace tracer :track @state))
+    this)
+  
+  (finish-race [this data]
     this)
   
   (update-positions [this position-data]
@@ -108,9 +148,8 @@
 ) ; end record
 
 (defn new-track []
-  (map->Track 
+  (map->RaceTrack 
     {:input-chan (chan)
      :output-chan (chan)
-     :lanes (ref)
-     :cars (ref)}))
+     :state (ref {})}))
  

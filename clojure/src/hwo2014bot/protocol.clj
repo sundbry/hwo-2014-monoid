@@ -1,11 +1,12 @@
 (ns hwo2014bot.protocol)
 
 (defprotocol PTrace ; Protocols are essentially Java interfaces
-  (in [_ json-data])
-  (out [_ json-data]))
+  (trace [_ type-kw json-data]))
 
 (defprotocol PTick
-  (tick [_ tick-num]))
+  (tick [_]))
 
-(defprotocol PTrack
-  (load-track [_ track-data]))
+(defprotocol PRaceTrack
+  (load-race [_ race-data])
+  (finish-race [_ finish-data])
+  (update-positions [_ position-data]))

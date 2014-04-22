@@ -1,29 +1,25 @@
 (ns hwo2014bot.racer
   (:require [clojure.data.json :as json]
             [clojure.tools.logging :as log]
+            [clojure.core.async :refer [<!!]]
             [aleph.tcp :refer [tcp-client]]
             [lamina.core :refer [enqueue wait-for-result wait-for-message]]
             [gloss.core :refer [string]]
             [com.stuartsierra.component :as component]
             [hwo2014bot.protocol :refer :all]))
 
-(def ^:dynamic channel-tracer nil) ; this gets bound in thread-local scope with (binding ...)
-
 (defn- json->clj [string]
   (json/read-str string :key-fn keyword))
 
-(defn- send-message [channel message]
+(defn- send-message [channel message tracer]
   (let [json-str (json/write-str message)]
-    (out channel-tracer json-str)
+    (trace tracer :out json-str)
     (enqueue channel json-str)))
 
-(defn- read-message [channel]
-  (try
-    (let [json-str (wait-for-message channel)]            
-      (in channel-tracer json-str)
-      (json->clj json-str))
-    (catch Exception e
-      (log/error e e))))
+(defn- read-message [channel tracer]
+  (let [json-str (wait-for-message channel)]
+    (trace tracer :in json-str)
+    (json->clj json-str)))
 
 (defn- connect-client-channel [host port]
   (log/info "Connecting to game server at" (str host ":" port))
@@ -45,7 +41,11 @@
 
 (defmethod handle-msg "gameInit" [msg racer]
   (log/debug "Race initialized.")
-  (load-track (:track racer) (:track (:data msg)))
+  (load-race (:track racer) (:race (:data msg)))
+  racer)
+
+(defmethod handle-msg "yourCar" [msg racer]
+  (log/debug "Your car:" (:name (:data msg)) (str "(" (:color (:data msg)) ")"))
   racer)
 
 (defmethod handle-msg "gameStart" [msg racer]
@@ -66,7 +66,6 @@
 
 (defmethod handle-msg "carPositions" [msg racer]
   (update-positions (:track racer) (:data msg))
-  (update-positions (:dashboard racer))
   racer)
 
 (defmethod handle-msg "crash" [msg racer]
@@ -78,15 +77,16 @@
   racer)
 
 (defmethod handle-msg "lapFinished" [msg racer]
-  (log/info "Lap" (:lap (:laptime (:data msg))) "finished.")
+  (log/info "Lap" (:lap (:lapTime (:data msg))) "finished.")
   racer)
 
 (defmethod handle-msg "dnf" [msg racer]
   (log/debug (:name (:data msg)) "has been disqualified.")
   racer)
 
-(defmethod handle-msg "finished" [msg racer]
+(defmethod handle-msg "finish" [msg racer]
   (log/debug (:name (:data msg)) "finished the race.")
+  (finish-race (:track racer) (:data msg))
   racer)
 
 (defmethod handle-msg :default [msg racer]
@@ -109,7 +109,7 @@
       (log/error e "Game loop failure"))
     (finally
       (future (apply (:finish-callback racer) [])) ; invoke finish-callback in a fork so it doesn't block on itself
-      nil))
+      nil)))
 
 (defrecord Racer [config tracer finish-callback track dashboard channel game-thread tick-count] ; tracer, finish-callback, track, dashboard get injected before start
   component/Lifecycle
@@ -130,12 +130,16 @@
   ;; Execute a game tick decision based on current information
   (tick [this]
     ; TODO: insert A* or other logic here
-    (send-message 
-      {:msgType "throttle" :data 0.5 :gameTick tick-count})
+    (let [dash (<!! (:output-chan dashboard))]
+      ;(log/debug "Dash received:" dash)
+      nil)
+    (send-message channel
+                  {:msgType "throttle" :data 0.5 :gameTick tick-count}
+                  tracer)
     ; or {:msgType "switchLane :data "Left|Right"}
     (update-in this [:tick-count] inc))
   
-  ) ; end record
+) ; end record
 
 (defn new-racer [conf]
   (map->Racer ; constructs a Racer record
