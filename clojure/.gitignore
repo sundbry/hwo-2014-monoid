@@ -1,1 +1,3 @@
 target
+data/trace-*
+monoid.log

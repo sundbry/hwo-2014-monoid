@@ -1,0 +1,8 @@
+#!/bin/bash
+
+source ../config
+
+cp config/config-prod.clj src/hwo2014bot/config.clj
+cp config/log4j.properties.prod resources/log4j.properties
+
+lein uberjar

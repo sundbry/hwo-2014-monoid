@@ -1,5 +1,7 @@
 #!/bin/bash
 
-source ../config
+# This package is pre-built, to avoid the hassle of trying to include dependency sources.
 
-lein uberjar
+# source ../config
+
+# lein uberjar

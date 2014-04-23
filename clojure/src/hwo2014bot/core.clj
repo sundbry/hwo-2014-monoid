@@ -28,7 +28,7 @@
     :racer (component/using (new-racer conf)
                             [:tracer :track :dashboard :driver])))
 
-(defn- finished-race [bot-atom]
+(defn- finished-race [stopped-cb bot-atom]
   (swap! bot-atom 
          (fn [sys]
            (try
@@ -36,10 +36,12 @@
              (log/debug "System stopped.")
              nil
              (catch Exception e
-               (log/error e "Failed to stop race bot"))))))
+               (log/error e "Failed to stop race bot")))))
+  (stopped-cb))
 
-(defn -main [& [host port botname botkey]]
-  (let [conf
+(defn start [& [stopped-callback host port botname botkey]]
+  (let [stopped-callback (if (nil? stopped-callback) (fn [] nil) stopped-callback)
+        conf
         (merge
           default-conf
           (when host
@@ -51,7 +53,7 @@
           (when botkey
             {:key botkey}))
         speed-racer (atom (new-race-bot conf)) ; atom proides boxed mutable state needed for callbacks
-        finished-cb #(finished-race speed-racer)]
+        finished-cb #(finished-race stopped-callback speed-racer)]
     (swap! speed-racer
            (fn [sys]            
              (try
@@ -62,3 +64,10 @@
              (catch Exception e
                (log/error e "Failure to start race bot"))))))
     nil)
+
+(defn quit-program []
+  (shutdown-agents)
+  (System/exit 0))
+
+(defn -main [& args]
+  (apply start (cons quit-program args)))

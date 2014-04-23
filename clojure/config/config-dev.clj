@@ -5,7 +5,7 @@
    :port 8091 ; default port, overriden by cli
    :key "NBANBPb2JZyDGw"
    :name "Monoid"
-   ;:trace {:dir "data"} ; optional
+   :trace {:dir "data"} ; optional
    :dashboard
      {:instant 6} ; # of ticks for instantaneous measurements
    :throttle
