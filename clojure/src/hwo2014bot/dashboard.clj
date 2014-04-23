@@ -48,9 +48,10 @@
     (close! output-chan)
     this)
   
-  ;PReader
-  #_(read [this]
-    (peek @state-buf))
+  PPassiveComponent
+  
+  (read-state [this]
+    (last @state-buf)) ; The most recent reading is at the end of the circular buf
   
 ) ; end record
 
@@ -59,5 +60,5 @@
     {:name car-name
      :config dash-conf
      :output-chan (chan)
-     :state-buf (ref (cbuf (:buffer dash-conf) :direction :left)) ; FIFO
+     :state-buf (ref (cbuf (:instant dash-conf) :direction :left)) ; FIFO
      }))

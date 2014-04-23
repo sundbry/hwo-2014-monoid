@@ -124,6 +124,11 @@
     (close! output-chan)
     this)
   
+  PPassiveComponent
+  
+  (read-state [this]
+    @state)        
+  
   PRaceTrack
   
   (load-race [this data]

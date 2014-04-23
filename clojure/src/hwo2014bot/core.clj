@@ -5,6 +5,8 @@
             [hwo2014bot.trace :refer [new-tracer]]
             [hwo2014bot.track :refer [new-track]]
             [hwo2014bot.dashboard :refer [new-dashboard]]
+            [hwo2014bot.throttle :refer [new-throttle]]
+            [hwo2014bot.driver :refer [new-driver]]             
             [hwo2014bot.racer :refer [new-racer]])
   (:gen-class)) ; :gen-class instructs the compiler to build a class file for this namespace
 
@@ -19,8 +21,12 @@
                             [:tracer])
     :dashboard (component/using (new-dashboard (:name conf) (:dashboard conf))
                                 [:tracer :track])
+    :throttle (component/using (new-throttle (:throttle conf))
+                               [:dashboard])
+    :driver (component/using (new-driver (:ai conf))
+                             [:tracer :track :dashboard :throttle])                                         
     :racer (component/using (new-racer conf)
-                            [:tracer :track :dashboard])))
+                            [:tracer :track :dashboard :driver])))
 
 (defn- finished-race [bot-atom]
   (swap! bot-atom 

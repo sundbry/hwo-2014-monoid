@@ -98,20 +98,21 @@
     (let [config (:config racer)]
       (log/debug "Joining race as" (:name config))
       (send-message (:channel racer) (join-msg config) (:tracer racer)))                    
-    (loop [racer racer]
+    (loop [racer racer
+           tick-num 0]
       (let [msg (read-message (:channel racer) (:tracer racer))
             racer (handle-msg msg racer)]
         (case (:msgType msg)
           "tournamentEnd" racer ; terminating case
-          "carPositions" (recur (tick racer))
-          (recur racer))))
+          "carPositions" (recur (tick racer tick-num) (inc tick-num))
+          (recur racer tick-num))))
     (catch Exception e
       (log/error e "Game loop failure"))
     (finally
       (future (apply (:finish-callback racer) [])) ; invoke finish-callback in a fork so it doesn't block on itself
       nil)))
 
-(defrecord Racer [config tracer finish-callback track dashboard channel game-thread tick-count] ; tracer, finish-callback, track, dashboard get injected before start
+(defrecord Racer [config channel game-thread finish-callback tracer track dashboard driver] ; finish-callback, tracer, track, dashboard, driver get injected before start
   component/Lifecycle
   
   (start [this]
@@ -124,24 +125,23 @@
   (stop [this]
     (log/info "Stopping racer.")
     @game-thread ; wait for game thread to stop. 
-    (assoc this :game-thread nil)) 
+    (assoc this :game-thread nil))
   
-  PTick
+  PActiveComponent
   ;; Execute a game tick decision based on current information
-  (tick [this]
-    ; TODO: insert A* or other logic here
-    (let [dash (<!! (:output-chan dashboard))]
-      ;(log/debug "Dash received:" dash)
-      nil)
-    (send-message channel
-                  {:msgType "throttle" :data 0.5 :gameTick tick-count}
-                  tracer)
-    ; or {:msgType "switchLane :data "Left|Right"}
-    (update-in this [:tick-count] inc))
+  (tick [this tick-num]
+    (let [dash (<!! (:output-chan dashboard)) ; consume the passive data process for this tick
+          action (tick driver tick-num)
+          response (if (nil? action)
+                     {:msgType "ping" :gameTick tick-num}
+                     action)]
+      (send-message channel
+                    response
+                    tracer))
+    this)
   
 ) ; end record
 
 (defn new-racer [conf]
   (map->Racer ; constructs a Racer record
-    {:config conf
-     :tick-count 0}))
+    {:config conf}))
