@@ -18,8 +18,9 @@
        :kI 1.0
        :kD 1.0}}
    :ai
-     {:driver "Mario"
-      :speed 6.5}
+     {:driver "Peach"        
+      :speed 7.0
+      :safe-angle 15.0}
      ; different AI drivers:
      ; :mario drives at fixed speed
      ; :danica (TODO) drives at fixed speed on straights, and fixed angle on turns
