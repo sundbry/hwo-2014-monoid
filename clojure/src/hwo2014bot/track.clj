@@ -1,6 +1,7 @@
 (ns hwo2014bot.track
   (:require [clojure.tools.logging :as log]
             [clojure.core.async :refer [chan go go-loop >! <! close!]]
+            
             [com.stuartsierra.component :as component]
             [hwo2014bot.protocol :refer :all]))
 
@@ -42,33 +43,49 @@
                  (rest pieces)))
         sections))))
 
-(defn make-laps [piece-list num-laps]
+(defn copy-laps [single-lap num-laps]
   (if (>= 1 num-laps)
-    piece-list
-    (concat piece-list (make-laps piece-list (dec num-laps)))))
+    single-lap
+    (concat single-lap (copy-laps single-lap (dec num-laps)))))
 
-(defn build-lanes [track-json num-laps]
+;;;; TODO build look-ahead limit (1 lap for lazy sequencing)
+
+#_(defn- second-lap [two-laps]
+  (drop two-laps (quot (count two-laps) 2)))
+
+(defn build-lap-loop [track-json]
+  (map #(build-lane (:pieces track-json) %)
+       (:lanes track-json))) ; todo loop the analysis for the tail-end of the track
+
+(defn build-fixed-laps [track-json num-laps]
+  (let [laps (copy-laps (:pieces track-json) num-laps)]
+    (map #(build-lane laps %)
+         (:lanes track-json))))
+
+(defn build-lanes 
   "Lanes are a series of sections, each with an offset from the starting line, a length, a possible switch, and a speed limit"
-  (let [track-pieces (make-laps (:pieces track-json) num-laps)]
-    (map (partial build-lane track-pieces) (:lanes track-json))))
+  ([track] (build-lanes track nil))
+  ([track-json num-laps] 
+    (if (nil? num-laps)
+      (build-lap-loop track-json)
+      (build-fixed-laps track-json num-laps))))
 
 (defn analyze-lane-section [finish-offset section]
   (assoc section :finish-offset (+ finish-offset (:length section))))
 
-(defn analyze-lane [lane]
+(defn static-analyze-lane [lane]
   "Determine forecasted speed limits for each lane, and offset from the finish line."
-    (loop [sections (list)
-           finish-offset 0.0
-           rev-sections (reverse lane)]
-      (if-let [section (first rev-sections)]
-        (let [tail-section (analyze-lane-section finish-offset section)]
-          (recur (cons tail-section sections)
+  (loop [sections (list)
+         finish-offset 0.0
+         rev-sections (reverse lane)]
+    (if-let [section (first rev-sections)]
+      (let [tail-section (analyze-lane-section finish-offset section)]
+        (recur (cons tail-section sections)
                (:finish-offset tail-section)
                (rest rev-sections)))
-        (vec sections)))) ; finally. convert to a vector for efficient random access
+      (vec sections)))) ; finally. convert to a vector for efficient random access
 
-(defn analyze-lanes [lanes]
-  (map analyze-lane lanes))
+;;; Car positions
 
 (defn setup-cars [car-data]
   (into {} (map
@@ -76,17 +93,29 @@
                [(:name (:id car)) {:color (:color (:id car))}])
              car-data)))
 
-(defn start-displacement [lane-sections piece-pos]
-  (if (<= (count lane-sections) (:section-index piece-pos))
-    0.0 ; they finished the race
-    (let [lane-section (nth lane-sections (:section-index piece-pos))]
-      (+ (:offset lane-section) (:section-displacement piece-pos)))))
+(defn lap-displacement [lane-cycle]
+  (let [tail (last lane-cycle)]
+    (+ (:offset tail)
+       (:length tail))))
 
-(defn convert-piece-position [pos-json lap-size]
-  "Convert a :piecePosition to a lane section position"
-  {:section-index (+ (* (:lap pos-json) lap-size)
-                     (:pieceIndex pos-json))
-   :section-displacement (:inPieceDistance pos-json)})
+(defn start-displacement [lane-sections piece-pos]
+  (if (< (:section-index piece-pos) (count lane-sections))   
+    (let [sect (nth lane-sections (:section-index piece-pos))]
+      (+ (:offset sect)
+         (:inPieceDistance piece-pos)))
+    (let [sect (nth lane-sections (:pieceIndex piece-pos))] ; loop lap 1, TODO: cycle lap 2 instead (provides safe entry into next cycle)
+      (+ (* (lap-displacement lane-sections)
+            (:lap piece-pos))
+         (:offset sect)
+         (:inPieceDistance piece-pos)))))
+
+(defn indexed-piece-position [pos-json lap-size]
+  "Determine index of :piecePosition as a lane section position"
+  (merge pos-json
+         {:section-index (if (:lap pos-json)      
+                           (+ (* (:lap pos-json) lap-size)
+                              (:pieceIndex pos-json))
+                           (:pieceIndex pos-json))}))
 
 (defn update-cars [prev-positions track-state new-positions]
   (into {} (map
@@ -97,7 +126,7 @@
                   {:angle (:angle car)
                    :lane (/ (+ (:startLaneIndex lane) (:endLaneIndex lane)) 2)
                    :start-displacement (start-displacement (nth (:lanes track-state) (:startLaneIndex lane))
-                                                           (convert-piece-position pos (:lap-size track-state)))
+                                                           (indexed-piece-position pos (:lap-size track-state)))
                    ;:finish-displacement (finish-displacement (nth lanes (:endLaneIndex lane)) pos)
                    }]))
                new-positions)))
@@ -132,13 +161,16 @@
   PRaceTrack
   
   (load-race [this data]
-    (let [lanes (vec (analyze-lanes (build-lanes (:track data) (:laps (:raceSession data)))))]
+    (let [session (:raceSession data)
+          lanes (vec (map static-analyze-lane (build-lanes (:track data) (:laps session))))]
       (dosync
         (ref-set state
                  {:tick -1
                   :lanes lanes
+                  :lap-size (count (:pieces (:track data)))
+                  :laps (:laps session) ; nil: qualification loop
                   :cars (setup-cars (:cars data))
-                  :lap-size (count (:pieces (:track data)))}))
+                  }))
       (trace tracer :track @state))
     this)
   

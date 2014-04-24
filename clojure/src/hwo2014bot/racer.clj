@@ -41,8 +41,12 @@
 
 (defmethod handle-msg "gameInit" [msg racer]
   (log/debug "Race initialized.")
-  (load-race (:track racer) (:race (:data msg)))
-  racer)
+  (let [msg
+        (if (:force-qual (:config racer))
+          (assoc-in msg [:data :race :raceSession] {:durationMs 60000})
+          msg)]
+    (load-race (:track racer) (:race (:data msg)))
+    racer))
 
 (defmethod handle-msg "yourCar" [msg racer]
   (log/debug "Your car:" (:name (:data msg)) (str "(" (:color (:data msg)) ")"))

@@ -5,7 +5,8 @@
    :port 8091 ; default port, overriden by cli
    :key "NBANBPb2JZyDGw"
    :name "Monoid"
-   ;:trace {:dir "data"} ; optional
+   :force-qual true ; test qualification race
+   :trace {:dir "data"} ; optional
    :dashboard
      {:instant 6} ; # of ticks for instantaneous measurements
    :throttle
@@ -20,6 +21,7 @@
    :ai
      {:driver "Mario"
       :speed 6.5}
+   
      ; different AI drivers:
      ; :mario drives at fixed speed
      ; :danica (TODO) drives at fixed speed on straights, and fixed angle on turns
