@@ -17,8 +17,9 @@
 (defprotocol PRaceTrack
   (load-race [_ race-data])
   (finish-race [_ finish-data])
-  (update-positions [_ position-data]))
+  (update-positions [_ position-data])
+  (my-position [_]))
 
 (defprotocol PController
-  (new-setpoint [_ sp-val]))
-
+  (new-setpoint [_ sp-val])
+  (set-mode [_ mode]))

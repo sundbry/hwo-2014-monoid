@@ -13,8 +13,9 @@
   {:offset section-offset
    :length (:length piece)
    :switch (:switch piece)
-   :limit Double/POSITIVE_INFINITY})
-
+   :limit Double/POSITIVE_INFINITY
+   :straight? true})
+  
 (defn turn-section [lane-offset section-offset piece]
   {:offset section-offset
    :length (if (< 0 (:angle piece))
@@ -23,7 +24,8 @@
              ; left turn
              (arc-length (+ (:radius piece) lane-offset) (- 0 (:angle piece))))
    :switch (:switch piece)
-   :limit 0.6}) ; TODO speed limit formula + analysis
+   :limit 0.6
+   :straight? false}) ; TODO speed limit formula + analysis
 
 (defn build-lane-section [lane-offset section-offset piece]
   (cond
@@ -93,21 +95,27 @@
                [(:name (:id car)) {:color (:color (:id car))}])
              car-data)))
 
+(defn lookup-section [lanes piece-pos]
+  (let [lane-sections (nth lanes (:startLaneIndex (:lane piece-pos)))]
+    (if (< (:section-index piece-pos) (count lane-sections))   
+      (nth lane-sections (:section-index piece-pos))
+      (nth lane-sections (:pieceIndex piece-pos)))))
+
 (defn lap-displacement [lane-cycle]
   (let [tail (last lane-cycle)]
     (+ (:offset tail)
        (:length tail))))
 
-(defn start-displacement [lane-sections piece-pos]
-  (if (< (:section-index piece-pos) (count lane-sections))   
-    (let [sect (nth lane-sections (:section-index piece-pos))]
-      (+ (:offset sect)
-         (:inPieceDistance piece-pos)))
-    (let [sect (nth lane-sections (:pieceIndex piece-pos))] ; loop lap 1, TODO: cycle lap 2 instead (provides safe entry into next cycle)
-      (+ (* (lap-displacement lane-sections)
-            (:lap piece-pos))
-         (:offset sect)
-         (:inPieceDistance piece-pos)))))
+(defn start-displacement [lane-sections section piece-pos]
+  (if (< (:section-index piece-pos) (count lane-sections))
+    ; sections defined through the end of the race (allows sprint through finish line)
+    (+ (:offset section)
+       (:inPieceDistance piece-pos))
+    ; loop sections past the end of the race
+    (+ (* (lap-displacement lane-sections)
+          (:lap piece-pos))
+       (:offset section)
+       (:inPieceDistance piece-pos))))
 
 (defn indexed-piece-position [pos-json lap-size]
   "Determine index of :piecePosition as a lane section position"
@@ -120,18 +128,21 @@
 (defn update-cars [prev-positions track-state new-positions]
   (into {} (map
              (fn [car]
-               (let [pos (:piecePosition car)
-                     lane (:lane pos)]
+               (let [pos (indexed-piece-position (:piecePosition car) (:lap-size track-state))
+                     lane (:lane pos)
+                     section (lookup-section (:lanes track-state) pos)]
                  [(:name (:id car))
-                  {:angle (:angle car)
-                   :lane (/ (+ (:startLaneIndex lane) (:endLaneIndex lane)) 2)
-                   :start-displacement (start-displacement (nth (:lanes track-state) (:startLaneIndex lane))
-                                                           (indexed-piece-position pos (:lap-size track-state)))
+                  {:piecePosition pos
+                   :section section
+                   :slip (Math/abs (:angle car))
+                   :start-displacement (start-displacement (nth (:lanes track-state)
+                                                                (:startLaneIndex lane)) 
+                                                           section pos)}
                    ;:finish-displacement (finish-displacement (nth lanes (:endLaneIndex lane)) pos)
-                   }]))
+                   ]))
                new-positions)))
 
-(defrecord RaceTrack [tracer input-chan output-chan state]
+(defrecord RaceTrack [config tracer input-chan output-chan state]
   component/Lifecycle
   
   (start [this] 
@@ -180,13 +191,17 @@
   (update-positions [this position-data]
     (go (>! input-chan position-data))
     this)
+  
+  (my-position [this]
+    (get (:cars @state) (:name config)))
     
 
 ) ; end record
 
-(defn new-track []
+(defn new-track [track-conf]
   (map->RaceTrack 
-    {:input-chan (chan)
+    {:config track-conf
+     :input-chan (chan)
      :output-chan (chan)
      :state (ref {})}))
  

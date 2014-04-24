@@ -1,16 +1,18 @@
-(ns hwo2014bot.driver.mario
+(ns hwo2014bot.driver.luigi
   (:require [clojure.tools.logging :as log]
             [clojure.core.async :refer [chan go go-loop >! <! close!]]
             [com.stuartsierra.component :as component]
             [hwo2014bot.protocol :refer :all]
             [hwo2014bot.message :as message]))
 
-;;; Mario AI drives at fixed speed. Useful for profiling tracks.
+;;; Luigi AI controls throttle based on slip angle.
 
 (defrecord Driver [config track dashboard throttle]
   component/Lifecycle
+  
   (start [this]
-    (new-setpoint throttle (:speed config))
+    (set-mode throttle :slip)
+    (new-setpoint throttle (:safe-angle config))
     this)
   
   (stop [this]

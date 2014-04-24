@@ -6,6 +6,10 @@
   
 ;; Throttle controller
 
+(def ^:private reset-pid 
+  {:previous-error 0
+   :integral 0})
+
 (defn limit-throttle [throttle-out]
   (max 0.0 (min 1.0 throttle-out)))
 
@@ -39,7 +43,12 @@
   
   (tick [this tick-num]
     (dosync
-      (alter throttle-state perform-throttle-pid (:velocity (read-state dashboard)) tick-num)))
+      (alter throttle-state
+             (fn [ctrl]
+               (perform-throttle-pid 
+                 ctrl
+                 (get (read-state dashboard) (:mode ctrl))
+                 tick-num)))))
   
   PController
   
@@ -48,9 +57,11 @@
       (alter throttle-state assoc :setpoint set-val))
     this)
   
-  #_(mode [this mode-kw]
-    
-    )
+  (set-mode [this mode-kw]
+    (dosync
+      (when (not= mode-kw (:mode @throttle-state))
+        (alter throttle-state merge {:mode mode-kw} reset-pid)))
+    this)
   
 )
 
@@ -61,9 +72,8 @@
                             {:tick -1
                              :setpoint 0
                              :throttle 0
-                             :previous-error 0
-                             :integral 0
                              :mode :velocity
                              :velocity {:kP 1.0 :kI 1.0 :kD 1.0}
-                             :angle {:kP 1.0 :kI 1.0 :kD 1.0}}
+                             :slip {:kP 1.0 :kI 1.0 :kD 1.0}}                            
+                            reset-pid
                             throttle-conf))}))

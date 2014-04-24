@@ -19,7 +19,7 @@
     (go (try (loop []
       (when-let [cur-track (<! (:output-chan track))]
         (let [cur-tick (:tick cur-track)
-              cur-pos (get (:cars cur-track) (:name this))
+              cur-pos (get (:cars cur-track) (:name config))
               cur-dash
               (dosync
                 (let [ref-pos (peek @state-buf)
@@ -55,10 +55,9 @@
   
 ) ; end record
 
-(defn new-dashboard [car-name dash-conf]
+(defn new-dashboard [dash-conf]
   (map->Dashboard
-    {:name car-name
-     :config dash-conf
+    {:config dash-conf
      :output-chan (chan)
      :state-buf (ref (cbuf (:instant dash-conf) :direction :left)) ; FIFO
      }))

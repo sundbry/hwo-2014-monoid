@@ -19,8 +19,13 @@
        :kI 1.0
        :kD 1.0}}
    :ai
-     {:driver "Mario"
+     #_{:driver "Mario"
       :speed 6.5}
+     #_{:driver "Luigi"
+      :safe-angle 15.0}
+     {:driver "Peach"        
+      :speed 7.0
+      :safe-angle 15.0}
    
      ; different AI drivers:
      ; :mario drives at fixed speed
