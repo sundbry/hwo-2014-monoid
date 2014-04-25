@@ -4,10 +4,9 @@ goog.require('goog.dom.classlist');
 goog.require('goog.events');
 goog.require('goog.ui.Component');
 goog.require('monoid.RaceMap');
+goog.require('monoid.RaceChart');
 
 goog.scope(function() {
-
-
 
 /**
  * @constructor
@@ -47,6 +46,8 @@ RaceView.prototype.createDom = function() {
   this.dom_.appendChild(element, this.slider_);
   this.getHandler().listen(this.slider_, goog.events.EventType.INPUT,
                            this.handleSliderChanged_);
+
+	this.charts_ = [];
 };
 
 
@@ -55,6 +56,13 @@ RaceView.prototype.update = function() {
 		throw new Error("Track not loaded");
 	}
 	this.map_.draw(this.gameTick_);
+	
+	/*
+	for (var i = 0; i < this.charts_.length; i++) {
+		this.charts_[i].draw(this.gameTick_);
+	}
+	*/
+	
 };
 
 
@@ -75,5 +83,17 @@ RaceView.prototype.setRace = function(race) {
   this.map_.setRace(race);
   this.slider_.max = race.getTotalGameTicks();
   this.update();
+	this.loadRaceCharts(race);
 };
+
+RaceView.prototype.loadRaceCharts = function(race) {
+	for (var i = 0; i < this.charts_.length; i++) {
+		this.charts_[i].dispose();
+	}
+	this.charts_ = monoid.RaceChart.createDefaultCharts(race);
+	for (var i = 0; i < this.charts_.length; i++) {
+		this.charts_[i].render(this.getElement());
+	}
+};
+
 });

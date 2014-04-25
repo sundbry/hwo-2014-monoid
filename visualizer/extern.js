@@ -74,3 +74,8 @@ CarPositionMessage.prototype.angle;
  *          lane: {startLaneIndex: number, endLaneIndex: number},
  *          lap: number}} */
 CarPositionMessage.prototype.piecePosition;
+
+/** @constructor */
+function Dygraph(node, data, opts){};
+Dygraph.prototype.destroy;
+Dygraph.prototype.ready;

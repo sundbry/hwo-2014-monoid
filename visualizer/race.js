@@ -14,6 +14,9 @@ goog.scope(function() {
  * @constructor
  */
 monoid.Race = function(raceLog) {
+	/** @private */
+	this.trace_ = [];
+
   /** @private {monoid.Track} */
   this.track_ = null;
 
@@ -32,26 +35,30 @@ monoid.Race = function(raceLog) {
   /** @private */
   this.totalTicks_ = 0;
 
-  this.parseLog_(raceLog.split('\n'));
+  this.parseLog_(raceLog.split("\n"));
 };
 var Race = monoid.Race;
 
 /** @private goog.log.Logger */
 Race.logger_ = goog.log.getLogger('monoid.Race');
 
+Race.prototype.getTraceData = function() {
+	return this.trace_;
+}
+
 /**
- * @param {!Array.<string>} lines
  * @private
  */
-Race.prototype.parseLog_ = function(lines) {
-	var lineLimit = lines.length; // Math.min(lines.length, 100); // for testing
-  for (var i = 0; i < lineLimit; i++) {
-    if (!lines[i] ||
-				(lines[i].substring(0, 32).indexOf('track') >= 0)) // Skip long "track" messages
+Race.prototype.parseLog_ = function(raceLog) {
+  for (var i = 0; i < raceLog.length; i++) {
+    if (!raceLog[i] ||
+				(raceLog[i].substring(0, 32).indexOf('track') >= 0)) // Skip long "track" messages
 			continue;
 
-    var line = eval(lines[i]);
+    var line = eval(raceLog[i]);
+		this.trace_.push(line);
 		var data = line[2];
+
 		switch (line[1]) {
 			case 'in':
       	this.parseInput(data, line[0]);
