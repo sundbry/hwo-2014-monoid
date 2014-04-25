@@ -7,6 +7,7 @@
 ;; Things like the track and dashboard are passive.
 ;; They perform analysis each tick before control is handed off to active components.
 (defprotocol PPassiveComponent
+  (output-channel [_])
   (read-state [_])) ; Responds with the current state 
 
 ;; Active components are things that perform some action in response, such as the throttle or the AI driver
@@ -18,8 +19,13 @@
   (load-race [_ race-data])
   (finish-race [_ finish-data])
   (update-positions [_ position-data])
+  (car-position [_ car-name])
   (my-position [_]))
 
 (defprotocol PController
   (new-setpoint [_ sp-val])
   (set-mode [_ mode]))
+
+(defprotocol PCharacterization
+  (estimate-lower-accel [_ throttle-out V0])
+  (estimate-upper-accel [_ throttle-out V0]))

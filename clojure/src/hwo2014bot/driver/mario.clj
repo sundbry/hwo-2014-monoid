@@ -7,7 +7,7 @@
 
 ;;; Mario AI drives at fixed speed. Useful for profiling tracks.
 
-(defrecord Driver [config track dashboard throttle]
+(defrecord Driver [config track dashboard throttle characterizer]
   component/Lifecycle
   (start [this]
     (new-setpoint throttle (:speed config))

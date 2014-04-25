@@ -1,13 +1,15 @@
-(ns hwo2014bot.driver.peach
+(ns hwo2014bot.driver.bowser
   (:require [clojure.tools.logging :as log]
             [clojure.core.async :refer [chan go go-loop >! <! close!]]
             [com.stuartsierra.component :as component]
             [hwo2014bot.protocol :refer :all]
             [hwo2014bot.message :as message]))
 
-;;; Peach AI toggles throttle mode depending on track section
+;;; Bowser AI features:
+;;; - Toggles throttle mode by track
+;;; - Fastest safe velocity
 
-(defrecord Driver [config track dashboard throttle]
+(defrecord Driver [config track dashboard throttle characterizer]
   component/Lifecycle
   
   (start [this]

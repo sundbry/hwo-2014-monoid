@@ -8,24 +8,30 @@
    :force-qual true ; test qualification race
    :trace {:dir "data"} ; optional
    :dashboard
-     {:instant 6} ; # of ticks for instantaneous measurements
+     {:instant 3} ; # of ticks for instantaneous measurements
+   :characterizer
+     {}
    :throttle
      {:velocity ; mode parameters
       {:kP 1.0
        :kI 1.0
        :kD 1.0}
-      :angle
+      :slip-magnitude
       {:kP 1.0
        :kI 1.0
        :kD 1.0}}
    :ai
-     #_{:driver "Mario"
+     {:driver "Mario"
       :speed 6.5}
      #_{:driver "Luigi"
       :safe-angle 15.0}
-     {:driver "Peach"        
+     #_{:driver "Peach"        
       :speed 7.0
       :safe-angle 15.0}
+     #_{:driver "Bowser"        
+      :speed 8.0
+      :safe-angle 15.0}
+     
    
      ; different AI drivers:
      ; :mario drives at fixed speed

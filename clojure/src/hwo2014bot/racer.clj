@@ -116,7 +116,7 @@
       (future (apply (:finish-callback racer) [])) ; invoke finish-callback in a fork so it doesn't block on itself
       nil)))
 
-(defrecord Racer [config channel game-thread finish-callback tracer track dashboard driver] ; finish-callback, tracer, track, dashboard, driver get injected before start
+(defrecord Racer [config channel game-thread finish-callback tracer track characterizer driver] ; finish-callback, tracer, track, characterizer driver get injected before start
   component/Lifecycle
   
   (start [this]
@@ -134,8 +134,8 @@
   PActiveComponent
   ;; Execute a game tick decision based on current information
   (tick [this tick-num]
-    (let [dash (<!! (:output-chan dashboard)) ; consume the passive data process for this tick
-          action (tick driver tick-num)
+    (<!! (output-channel characterizer)) ; consume the passive data channel for this tick
+    (let [action (tick driver tick-num)
           response (if (nil? action)
                      {:msgType "ping" :gameTick tick-num}
                      action)]

@@ -14,7 +14,8 @@
    :length (:length piece)
    :switch (:switch piece)
    :limit Double/POSITIVE_INFINITY
-   :straight? true})
+   :straight? true
+   :piece piece})
   
 (defn turn-section [lane-offset section-offset piece]
   {:offset section-offset
@@ -25,7 +26,8 @@
              (arc-length (+ (:radius piece) lane-offset) (- 0 (:angle piece))))
    :switch (:switch piece)
    :limit 0.6
-   :straight? false}) ; TODO speed limit formula + analysis
+   :straight? false
+   :piece piece}) ; TODO speed limit formula + analysis
 
 (defn build-lane-section [lane-offset section-offset piece]
   (cond
@@ -134,7 +136,7 @@
                  [(:name (:id car))
                   {:piecePosition pos
                    :section section
-                   :slip (Math/abs (:angle car))
+                   :angle (:angle car)
                    :start-displacement (start-displacement (nth (:lanes track-state)
                                                                 (:startLaneIndex lane)) 
                                                            section pos)}
@@ -150,10 +152,11 @@
       (when-let [position-data (<! input-chan)]
         (let [track-state
               (dosync
-                (alter state update-in [:tick] inc)
                 (alter state
                        (fn [cur-state]
-                         (update-in cur-state [:cars] update-cars cur-state position-data))))]
+                         (-> cur-state
+                           (update-in [:tick] inc)
+                           (update-in [:cars] update-cars cur-state position-data)))))]
           (>! output-chan track-state))
         (recur)))
       (catch Exception e
@@ -167,7 +170,9 @@
   PPassiveComponent
   
   (read-state [this]
-    @state)        
+    @state)
+  
+  (output-channel [this] output-chan)
   
   PRaceTrack
   
@@ -192,8 +197,11 @@
     (go (>! input-chan position-data))
     this)
   
+  (car-position [this car-name]    
+    (get (:cars @state) car-name))
+  
   (my-position [this]
-    (get (:cars @state) (:name config)))
+    (car-position this (:name config)))
     
 
 ) ; end record

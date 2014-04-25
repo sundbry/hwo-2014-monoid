@@ -1,2 +1,2 @@
 #!/bin/sh 
-cat `ls -t | head -n 1`
+cat `ls -t | grep trace | head -n 1`
