@@ -5,21 +5,37 @@
    :port 8091 ; default port, overriden by cli
    :key "NBANBPb2JZyDGw"
    :name "Monoid"
-   :trace {:dir "data"} ; optional
+   :force-qual true ; test qualification race
+   :passive-timeout 10 ; 10 ms to process passive data (leaves us 40ms for decision making)
+   :trace {:dir "data/keimola"} ; optional
    :dashboard
-     {:instant 6} ; # of ticks for instantaneous measurements
+     {:instant 3} ; # of ticks for instantaneous measurements
+   :characterizer
+     {}
    :throttle
      {:velocity ; mode parameters
       {:kP 1.0
        :kI 1.0
        :kD 1.0}
-      :angle
+      :slip-magnitude
       {:kP 1.0
        :kI 1.0
        :kD 1.0}}
+   :track
+     {:trace true}
    :ai
      {:driver "Mario"
-      :speed 6.5}
+      :speed 6.40}
+     #_{:driver "Luigi"
+      :safe-angle 15.0}
+     #_{:driver "Peach"        
+      :speed 7.0
+      :safe-angle 15.0}
+     #_{:driver "Bowser"        
+      :speed 8.0
+      :safe-angle 15.0}
+     
+   
      ; different AI drivers:
      ; :mario drives at fixed speed
      ; :danica (TODO) drives at fixed speed on straights, and fixed angle on turns

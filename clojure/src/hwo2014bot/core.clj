@@ -18,7 +18,7 @@
     ;:db (new-database host port)
     ;:sched (new-scheduler)
     :tracer (new-tracer (:trace conf))
-    :track (component/using (new-track {:name (:name conf)})
+    :track (component/using (new-track (assoc (:track conf) :name (:name conf)))
                             [:tracer])
     :dashboard (component/using (new-dashboard (assoc (:dashboard conf) :name (:name conf)))
                                 [:tracer :track])

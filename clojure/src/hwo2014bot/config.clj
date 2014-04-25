@@ -6,7 +6,8 @@
    :key "NBANBPb2JZyDGw"
    :name "Monoid"
    :force-qual true ; test qualification race
-   :trace {:dir "data"} ; optional
+   :passive-timeout 10 ; 10 ms to process passive data (leaves us 40ms for decision making)
+   :trace {:dir "data/keimola"} ; optional
    :dashboard
      {:instant 3} ; # of ticks for instantaneous measurements
    :characterizer
@@ -20,9 +21,11 @@
       {:kP 1.0
        :kI 1.0
        :kD 1.0}}
+   :track
+     {:trace true}
    :ai
      {:driver "Mario"
-      :speed 6.5}
+      :speed 6.40}
      #_{:driver "Luigi"
       :safe-angle 15.0}
      #_{:driver "Peach"        

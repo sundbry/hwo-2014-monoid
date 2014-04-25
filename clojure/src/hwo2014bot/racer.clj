@@ -1,12 +1,14 @@
 (ns hwo2014bot.racer
   (:require [clojure.data.json :as json]
             [clojure.tools.logging :as log]
-            [clojure.core.async :refer [<!!]]
+            [clojure.core.async :refer [<!! alts!! timeout]]
             [aleph.tcp :refer [tcp-client]]
             [lamina.core :refer [enqueue wait-for-result wait-for-message]]
             [gloss.core :refer [string]]
             [com.stuartsierra.component :as component]
             [hwo2014bot.protocol :refer :all]))
+
+(def ^:private SERVER_TIMEOUT 2000)
 
 (defn- json->clj [string]
   (json/read-str string :key-fn keyword))
@@ -17,7 +19,7 @@
     (enqueue channel json-str)))
 
 (defn- read-message [channel tracer]
-  (let [json-str (wait-for-message channel)]
+  (let [json-str (wait-for-message channel SERVER_TIMEOUT)]
     (trace tracer :in json-str)
     (json->clj json-str)))
 
@@ -110,9 +112,10 @@
           "tournamentEnd" racer ; terminating case
           "carPositions" (recur (tick racer tick-num) (inc tick-num))
           (recur racer tick-num))))
-    (catch Exception e
+    (catch Throwable e
       (log/error e "Game loop failure"))
     (finally
+      (log/debug "Game loop ended.")
       (future (apply (:finish-callback racer) [])) ; invoke finish-callback in a fork so it doesn't block on itself
       nil)))
 
@@ -134,14 +137,16 @@
   PActiveComponent
   ;; Execute a game tick decision based on current information
   (tick [this tick-num]
-    (<!! (output-channel characterizer)) ; consume the passive data channel for this tick
-    (let [action (tick driver tick-num)
-          response (if (nil? action)
-                     {:msgType "ping" :gameTick tick-num}
-                     action)]
-      (send-message channel
-                    response
-                    tracer))
+    (let [[pasv-ready source] (alts!! [(output-channel characterizer) (timeout (:passive-timeout config))])]
+      (when (not pasv-ready)
+        (log/warn  "Passive data channel timed out" {:timeout (:passive-timeout config) :tick tick-num}))
+      (let [action (when pasv-ready (tick driver tick-num))
+            response (if (nil? action)
+                       {:msgType "ping" :gameTick tick-num}
+                       action)]
+        (send-message channel
+                      response
+                      tracer)))
     this)
   
 ) ; end record

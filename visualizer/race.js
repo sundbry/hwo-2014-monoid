@@ -44,14 +44,25 @@ Race.logger_ = goog.log.getLogger('monoid.Race');
  * @private
  */
 Race.prototype.parseLog_ = function(lines) {
-  for (var i = 0; i < lines.length; i++) {
-    if (!lines[i]) continue;
-    // Quick and dirty
+	var lineLimit = lines.length; // Math.min(lines.length, 100); // for testing
+  for (var i = 0; i < lineLimit; i++) {
+    if (!lines[i] ||
+				(lines[i].substring(0, 32).indexOf('track') >= 0)) // Skip long "track" messages
+			continue;
+
     var line = eval(lines[i]);
-    if (line[1] == 'in') {
-      this.parseInput(line[2], line[0]);
-    } else if (line[1] == 'out') {
-      this.parseOutput(line[2], line[1]);
+		var data = line[2];
+		switch (line[1]) {
+			case 'in':
+      	this.parseInput(data, line[0]);
+				break;
+			case 'out':
+	      this.parseOutput(data, line[0]);
+				break;
+			case 'dashboard':
+				// this.parseDashboard(data);
+			default:
+				break;
     }
   }
 };
@@ -72,6 +83,10 @@ Race.prototype.parseInput = function(msg, timestamp) {
    default:
     goog.log.info(Race.logger_, 'Unknown message type: ' + msg.msgType);
   }
+};
+
+Race.prototype.parseDashboard = function(msg) {
+	// update dashboard ui
 };
 
 

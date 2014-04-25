@@ -51,7 +51,10 @@ RaceView.prototype.createDom = function() {
 
 
 RaceView.prototype.update = function() {
-  this.map_.draw(this.gameTick_);
+	if (this.race_.getTrack() == null) {
+		throw new Error("Track not loaded");
+	}
+	this.map_.draw(this.gameTick_);
 };
 
 

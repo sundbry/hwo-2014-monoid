@@ -1,5 +1,6 @@
 (ns hwo2014bot.trace
   (:require ;[clojure.java.io :as io]
+            [clojure.data.json :as json]
             [clojure.tools.logging :as log]
             [com.stuartsierra.component :as component]
             [hwo2014bot.protocol :refer :all])
@@ -18,7 +19,8 @@
         nil))))
 
 (defn- trace-msg [fh io-mode msg]
-  (let [entry (str "[" (.getTime (Date.)) ", '" (name io-mode) "', " msg "]\n")] ; build a json tuple with the timestamp, i/o, msg
+  (let [data (if (string? msg) msg (json/write-str msg))
+        entry (str "[" (.getTime (Date.)) ", \"" (name io-mode) "\", " data  "]\n")] ; build a json tuple with the timestamp, i/o, msg
     (print-simple entry fh))
   fh)
 
@@ -26,7 +28,8 @@
   component/Lifecycle
   
   (start [this]
-    (send-off trace-agent (fn [_] (new-trace-file config)))
+    (send-off trace-agent (fn [_]
+                            (new-trace-file config)))
     this)
   
   (stop [this]
@@ -39,7 +42,8 @@
   PTrace
   
   (trace [this type-kw msg]
-    (send-off trace-agent (fn [fh] (trace-msg fh type-kw msg)))
+    (send-off trace-agent (fn [fh]
+                            (trace-msg fh type-kw msg)))
     this)
     
 ) ; end record

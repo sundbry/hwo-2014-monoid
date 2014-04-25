@@ -187,7 +187,8 @@
                   :laps (:laps session) ; nil: qualification loop
                   :cars (setup-cars (:cars data))
                   }))
-      (trace tracer :track @state))
+      (when (:trace config)
+        (trace tracer :track @state)))
     this)
   
   (finish-race [this data]

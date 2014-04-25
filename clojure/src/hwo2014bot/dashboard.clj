@@ -1,6 +1,6 @@
 (ns hwo2014bot.dashboard
   (:require [clojure.tools.logging :as log]
-            [clojure.core.async :refer [chan go go-loop >! <! close!]]
+            [clojure.core.async :refer [chan go go-loop >! <! close! pipe]]
             [com.stuartsierra.component :as component]
             [hamakar.circular-buffer :refer [cbuf]]
             [hwo2014bot.protocol :refer :all]
