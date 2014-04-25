@@ -98,6 +98,8 @@
              car-data)))
 
 (defn lookup-section [lanes piece-pos]
+  (log/debug "lanes:" lanes)
+  (log/debug "piece-pos:" piece-pos)
   (let [lane-sections (nth lanes (:startLaneIndex (:lane piece-pos)))]
     (if (< (:section-index piece-pos) (count lane-sections))   
       (nth lane-sections (:section-index piece-pos))
