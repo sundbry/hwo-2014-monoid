@@ -1,0 +1,18 @@
+Notes on Acceleration and Motion
+
+Calculation
+1. If acceleration is track-invariant (constant within a track),
+		 A = A(T), constant throttle (T)
+   Corollary:
+	   Deceleration is constant.
+   V1(t) = V0 + At, constant throttle over period t
+   X1(t) = 1/2*A*t^2 + V0*t + X0, constant throttle over t
+
+1/2*A*t^2 + V0*t - X = 0
+
+Measurement
+1. Under constant velocity, 
+     V(X, t) = X / t
+2. Under constant acceleration, 
+     A(X, V0, t) = 2X/(t^2) - 2V0/t
+

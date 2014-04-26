@@ -1,0 +1,14 @@
+#!/bin/bash
+
+source ../config
+
+cp src/hwo2014bot/config.clj config/config-restore.clj
+cp config/config-prod.clj src/hwo2014bot/config.clj
+cp config/log4j.properties.prod resources/log4j.properties
+
+lein uberjar
+if [ $? = 0 ]; then
+	cp target/hwo2014bot-0.1.0-SNAPSHOT-standalone.jar bin/hwo2014bot-standalone.jar
+fi
+
+cp config/config-restore.clj src/hwo2014bot/config.clj

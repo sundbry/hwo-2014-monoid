@@ -14,6 +14,9 @@ goog.scope(function() {
  * @constructor
  */
 monoid.Race = function(raceLog) {
+	/** @private */
+	this.trace_ = [];
+
   /** @private {monoid.Track} */
   this.track_ = null;
 
@@ -32,26 +35,41 @@ monoid.Race = function(raceLog) {
   /** @private */
   this.totalTicks_ = 0;
 
-  this.parseLog_(raceLog.split('\n'));
+  this.parseLog_(raceLog.split("\n"));
 };
 var Race = monoid.Race;
 
 /** @private goog.log.Logger */
 Race.logger_ = goog.log.getLogger('monoid.Race');
 
+Race.prototype.getTraceData = function() {
+	return this.trace_;
+}
+
 /**
- * @param {!Array.<string>} lines
  * @private
  */
-Race.prototype.parseLog_ = function(lines) {
-  for (var i = 0; i < lines.length; i++) {
-    if (!lines[i]) continue;
-    // Quick and dirty
-    var line = eval(lines[i]);
-    if (line[1] == 'in') {
-      this.parseInput(line[2], line[0]);
-    } else if (line[1] == 'out') {
-      this.parseOutput(line[2], line[1]);
+Race.prototype.parseLog_ = function(raceLog) {
+  for (var i = 0; i < raceLog.length; i++) {
+    if (!raceLog[i] ||
+				(raceLog[i].substring(0, 32).indexOf('track') >= 0)) // Skip long "track" messages
+			continue;
+
+    var line = eval(raceLog[i]);
+		this.trace_.push(line);
+		var data = line[2];
+
+		switch (line[1]) {
+			case 'in':
+      	this.parseInput(data, line[0]);
+				break;
+			case 'out':
+	      this.parseOutput(data, line[0]);
+				break;
+			case 'dashboard':
+				// this.parseDashboard(data);
+			default:
+				break;
     }
   }
 };
@@ -72,6 +90,10 @@ Race.prototype.parseInput = function(msg, timestamp) {
    default:
     goog.log.info(Race.logger_, 'Unknown message type: ' + msg.msgType);
   }
+};
+
+Race.prototype.parseDashboard = function(msg) {
+	// update dashboard ui
 };
 
 

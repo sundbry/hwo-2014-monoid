@@ -33,17 +33,17 @@ goog.inherits(RaceMap, goog.ui.Component);
 
 
 /** @const {number} */
-RaceMap.WIDTH = 800;
+RaceMap.WIDTH = 400;
 
 /** @const {number} */
-RaceMap.HEIGHT = 400;
+RaceMap.HEIGHT = 200;
 
 
 /** @override */
 RaceMap.prototype.createDom = function() {
   this.setElementInternal(
       this.dom_.createDom('canvas',
-                          {width: RaceMap.WIDTH, height: RaceMap.HEIGHT}));
+                          {width: RaceMap.WIDTH, height: RaceMap.HEIGHT, "class": "race-display"}));
   this.context_ = this.getElement().getContext('2d');
 };
 

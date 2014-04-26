@@ -2,4 +2,4 @@
 
 source ../scripts/check_pl_args
 
-java -jar target/hwo2014bot-0.1.0-SNAPSHOT-standalone.jar "$@"
+java -jar bin/hwo2014bot-standalone.jar "$@"

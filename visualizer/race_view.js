@@ -5,10 +5,9 @@ goog.require('goog.events');
 goog.require('goog.ui.Component');
 goog.require('monoid.CarInfoView');
 goog.require('monoid.RaceMap');
+goog.require('monoid.RaceChart');
 
 goog.scope(function() {
-
-
 
 /**
  * @constructor
@@ -34,6 +33,8 @@ monoid.RaceView = function() {
 
   /** @type {Element} */
   this.carInfosDiv_ = null;
+
+  this.charts_ = [];
 };
 var RaceView = monoid.RaceView;
 goog.inherits(RaceView, goog.ui.Component);
@@ -65,12 +66,20 @@ RaceView.prototype.createDom = function() {
  * @param {number} gameTick
  */
 RaceView.prototype.setGameTick = function(gameTick) {
+  if (this.race_.getTrack() == null) {
+    throw new Error("Track not loaded");
+  }
   this.gameTick_ = gameTick;
   this.slider_.value = gameTick;
   this.map_.draw(this.gameTick_);
   for (var i = 0; i < this.carInfoViews_.length; i++) {
     this.carInfoViews_[i].setGameTick(gameTick);
   }
+  /*
+  for (var i = 0; i < this.charts_.length; i++) {
+    this.charts_[i].draw(this.gameTick_);
+  }
+  */
 };
 
 
@@ -96,6 +105,7 @@ RaceView.prototype.setRace = function(race) {
     this.carInfoViews_.push(view);
   }
   this.slider_.max = race.getTotalGameTicks();
+  this.loadRaceCharts(race);
   this.setGameTick(0);
 };
 
@@ -112,5 +122,15 @@ RaceView.prototype.clearCarInfoViews_ = function() {
     this.carInfoViews_[i].dispose();
   }
   this.carInfoViews_ = [];
+};
+
+RaceView.prototype.loadRaceCharts = function(race) {
+	for (var i = 0; i < this.charts_.length; i++) {
+		this.charts_[i].dispose();
+	}
+	this.charts_ = monoid.RaceChart.createDefaultCharts(race);
+	for (var i = 0; i < this.charts_.length; i++) {
+		this.charts_[i].render(this.getElement());
+	}
 };
 });
