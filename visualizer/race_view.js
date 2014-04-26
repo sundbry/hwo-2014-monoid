@@ -3,6 +3,7 @@ goog.provide('monoid.RaceView');
 goog.require('goog.dom.classlist');
 goog.require('goog.events');
 goog.require('goog.ui.Component');
+goog.require('goog.style');
 goog.require('monoid.CarInfoView');
 goog.require('monoid.RaceMap');
 goog.require('monoid.RaceChart');
@@ -58,6 +59,7 @@ RaceView.prototype.createDom = function() {
                            this.handleSliderChanged_);
 
   this.carInfosDiv_ = this.dom_.createDom('div', 'car-info-container');
+  goog.style.setElementShown(this.carInfosDiv_, false);
   this.dom_.appendChild(element, this.carInfosDiv_);
 };
 
