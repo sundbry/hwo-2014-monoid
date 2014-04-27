@@ -6,11 +6,63 @@
             [hwo2014bot.protocol :refer :all]
             [hwo2014bot.constant :as const]))
 
-(defrecord PerformanceCharacterizer [config dashboard throttle output-chan]
+;; Calculate acceleration based on known coefficients
+(defn calculate-accel 
+  ([throttle-out velocity drag-coeff]
+    (calculate-accel throttle-out velocity drag-coeff 0))
+  
+  ([throttle-out velocity throttle-coeff drag-coeff k-friction]
+    ; Sum of forces Fa = Ft - Ff - Fd
+    ; Quadratic function: A = -CD*Velocity^2 + CT*Throttle  - CF
+    (let [A-out (- (* throttle-coeff throttle-out)
+                   (* drag-coeff velocity velocity)
+                   k-friction)]
+      A-out)))
+
+;; Returns throttle calibration factor measurement
+(defn calibrate-throttle
+  ([throttle-out A-measured V-measured]
+    (calibrate-throttle A-measured V-measured 0 0))
+  
+  ([throttle-out A-measured V-measured drag-coeff k-friction]
+    ; Solve for CT
+    (let [throttle-cf (/ (+ A-measured
+                            (* drag-coeff V-measured V-measured)
+                            k-friction)
+                         throttle-out)]
+      throttle-cf)))
+
+;; Measure drag constant
+(defn calibrate-drag
+  [throttle-out A-measured V-measured throttle-coeff k-friction]
+  ; CD = (CT*Throttle - A - CF) / Velocity^2
+  (let [drag-cf (/ (- (* throttle-coeff throttle-out)
+                      A-measured
+                      k-friction)
+                   (* V-measured V-measured))]
+    drag-cf))
+
+;; Measure kinetic friction 
+(defn calibrate-kinetic-friction
+  [throttle-out A-measured V-measured throttle-coeff drag-coeff]
+  (let [k-friction (- (* throttle-coeff throttle-out)
+                      (* drag-coeff V-measured V-measured)
+                      A-measured)]
+    k-friction))
+      
+(defrecord PerformanceCharacterizer [config dashboard throttle calib-state output-chan]
   component/Lifecycle
   
   (start [this]
     (pipe (output-channel dashboard) output-chan)
+    #_(go (try (loop []
+      (when-let [dash-state (<! (output-chan dashboard))]
+        ; Run passive (continuous) characterization
+        ; (passive-characterize this dash-state)
+        (>! output-chan)
+        (recur)))
+      (catch Exception e
+        (log/error e "Passive sharacterization error"))))
     this)
   
   (stop [this]
@@ -19,28 +71,36 @@
   PPassiveComponent
   
   (read-state [this]
-    {})
+    @calib-state)
   
   (output-channel [this] output-chan)
   
   PCharacterization
   
+  (estimate-accel [this throttle-out velocity]
+    (let [calib @calib-state]
+      (calculate-accel throttle-out velocity (:throttle calib) (:drag calib) (:k-friction calib))))
+  
   ;; Estimate the lower-bound acceleration output, given throttle output and initial velocity.
   ;; Useful for projecting when to speed-up
-  (estimate-lower-accel [this throttle-out V0]
+  #_(estimate-lower-accel [this throttle-out V0]
     nil
     )
   
   ;; Estimate the upper-bound acceleration output, given throttle output and initial velocity.
   ;; Useful for projecting safe brake distance
-  (estimate-upper-accel [this throttle-out V0]
+  #_(estimate-upper-accel [this throttle-out V0]
     nil
     )
   
-  )
+  (teach-calib [this property value]
+    (alter calib-state assoc property value))
+  
+)
 
 (defn new-characterizer [conf]
   (map->PerformanceCharacterizer
     {:config conf
+     :calib-state (ref {:throttle 1.0 :drag 0.0 :k-friction 0.0})
      :output-chan (chan)}))
  

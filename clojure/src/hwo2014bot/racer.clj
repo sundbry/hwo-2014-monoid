@@ -6,7 +6,8 @@
             [lamina.core :refer [enqueue wait-for-result wait-for-message]]
             [gloss.core :refer [string]]
             [com.stuartsierra.component :as component]
-            [hwo2014bot.protocol :refer :all]))
+            [hwo2014bot.protocol :refer :all]
+            [hwo2014bot.message :as message]))
 
 (def ^:private SERVER_TIMEOUT 2000)
 
@@ -99,6 +100,12 @@
   (log/warn "Unhandled message:" msg)
   racer)
 
+  
+(defn- zero-tick [racer]
+  (send-message (:channel racer)
+                {:msgType "throttle" :data 1.0}
+                (:tracer racer)))
+
 (defn- game-loop [racer]
   (try
     (let [config (:config racer)]
@@ -110,6 +117,7 @@
             racer (handle-msg msg racer)]
         (case (:msgType msg)
           "tournamentEnd" racer ; terminating case
+          ;"gameStart" (recur (zero-tick racer tick-num) tick-num)
           "carPositions" (recur (tick racer tick-num) (inc tick-num))
           (recur racer tick-num))))
     (catch Throwable e
@@ -142,7 +150,7 @@
         (log/warn  "Passive data channel timed out" {:timeout (:passive-timeout config) :tick tick-num}))
       (let [action (when pasv-ready (tick driver tick-num))
             response (if (nil? action)
-                       {:msgType "ping" :gameTick tick-num}
+                       (message/ping tick-num)
                        action)]
         (send-message channel
                       response

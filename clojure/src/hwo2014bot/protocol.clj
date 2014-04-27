@@ -27,5 +27,8 @@
   (set-mode [_ mode]))
 
 (defprotocol PCharacterization
-  (estimate-lower-accel [_ throttle-out V0])
-  (estimate-upper-accel [_ throttle-out V0]))
+  (estimate-accel [_ throttle-out velocity])
+  (teach-calib [_ prop val]))
+
+  ;(estimate-lower-accel [_ throttle-out V0])
+  ;(estimate-upper-accel [_ throttle-out V0]))

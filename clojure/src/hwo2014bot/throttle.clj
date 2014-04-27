@@ -15,19 +15,24 @@
 
 (defn perform-throttle-pid [ctrl feedback-val tick-num]
   ; http://en.wikipedia.org/wiki/PID_controller#Pseudocode
-  (let [coeff (get ctrl (:mode ctrl))
+  (let [coeffs (get ctrl (:mode ctrl))
         dt (- tick-num (:tick ctrl))
         error (- (:setpoint ctrl) feedback-val)
         integral (limit-throttle (+ (:integral ctrl) (* error dt))) ; prevents "windup"
         derivative (/ (- error (:previous-error ctrl)) dt)
-        output (+ (* (:kP coeff) error)
-                  (* (:kI coeff) integral)
-                  (* (:kD coeff) derivative))]
+        output (+ (* (:kP coeffs) error)
+                  (* (:kI coeffs) integral)
+                  (* (:kD coeffs) derivative))]
     (merge ctrl
            {:throttle (limit-throttle output)
             :previous-error error
             :integral integral
             :tick tick-num})))
+
+(defn manual-throttle [ctrl tick-num]
+  (merge ctrl
+         {:throttle (:setpoint ctrl)
+          :tick tick-num}))
 
 (defrecord ThrottleController [tracer dashboard config throttle-state]
   
@@ -45,10 +50,17 @@
     (dosync
       (alter throttle-state
              (fn [ctrl]
-               (perform-throttle-pid 
-                 ctrl
-                 (get (read-state dashboard) (:mode ctrl))
-                 tick-num)))))
+               (case (:mode ctrl)
+                 :manual (manual-throttle ctrl tick-num)                        
+                 (perform-throttle-pid ctrl
+                                       (get (read-state dashboard) (:mode ctrl))
+                                       tick-num))))))
+  
+  PPassiveComponent
+  
+  (output-channel [this] (throw (ex-info "not supported" this)))
+  
+  (read-state [this] @throttle-state)
   
   PController
   
