@@ -11,8 +11,10 @@ goog.scope(function() {
 monoid.RaceChart = function(race, valueSelectors) {
   goog.base(this);
 
+  /** @private {Dygraph} */
   this.graph_ = null;
-	this.selectors_ = valueSelectors;
+
+  this.selectors_ = valueSelectors;
 
   /** @type {monoid.Race} */
   this.race_ = race;
@@ -45,6 +47,13 @@ RaceChart.prototype.createDom = function() {
   this.setElementInternal(
       this.dom_.createDom('div',
                           {width: RaceChart.WIDTH, height: RaceChart.HEIGHT, "class": "chart"}));
+};
+
+
+/** @override */
+RaceChart.prototype.enterDocument = function() {
+  goog.base(this, 'enterDocument');
+  console.log("Loading graph for: " + this.selectors_.join(" "));
   var graphOpts = {
     //customBars: true,
     // title: 'Daily Temperatures in New York vs. San Francisco',
@@ -53,12 +62,12 @@ RaceChart.prototype.createDom = function() {
     //labelsDivStyles: { 'textAlign': 'right' },
     //showRangeSelector: true
   };
-  console.log("Loading graph for: " + this.selectors_.join(" "));
   this.graph_ = new Dygraph(this.getElement(), this.loadData(), graphOpts);
   this.graph_.ready(function() {
     console.log("Graph loaded.");
   });
 };
+
 
 /** @override */
 RaceChart.prototype.dispose = function() {
