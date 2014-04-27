@@ -2,3 +2,5 @@ log
 bot.pid
 /closure
 *.sw*
+/visualizer/deps.js
+/visualizer/main-compiled.js
