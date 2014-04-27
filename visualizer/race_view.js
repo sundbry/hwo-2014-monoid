@@ -35,6 +35,7 @@ monoid.RaceView = function() {
   /** @type {Element} */
   this.carInfosDiv_ = null;
 
+  /** @private {Array.<monoid.RaceChart>} */
   this.charts_ = [];
 };
 var RaceView = monoid.RaceView;
@@ -97,9 +98,9 @@ RaceView.prototype.handleSliderChanged_ = function(e) {
  * @param {monoid.Race} race
  */
 RaceView.prototype.setRace = function(race) {
+  this.cleanup_();
   this.race_ = race;
   this.map_.setRace(race);
-  this.clearCarInfoViews_();
   var cars = race.getCars();
   for (var i = 0; i < cars.length; i++) {
     var view = new monoid.CarInfoView(cars[i]);
@@ -114,22 +115,21 @@ RaceView.prototype.setRace = function(race) {
 
 /** @override */
 RaceView.prototype.disposeInternal = function() {
-  this.clearCarInfoViews_();
+  this.cleanup_();
   goog.base(this, 'disposeInternal');
 };
 
 
-RaceView.prototype.clearCarInfoViews_ = function() {
-  for (var i = 0; i < this.carInfoViews_.length; i++) {
-    this.carInfoViews_[i].dispose();
+RaceView.prototype.cleanup_ = function() {
+  while(this.charts_.length) {
+    this.charts_.shift().dispose();
   }
-  this.carInfoViews_ = [];
+  while(this.carInfoViews_.length) {
+    this.carInfoViews_.shift().dispose();
+  }
 };
 
 RaceView.prototype.loadRaceCharts = function(race) {
-	for (var i = 0; i < this.charts_.length; i++) {
-		this.charts_[i].dispose();
-	}
 	this.charts_ = monoid.RaceChart.createDefaultCharts(race);
 	for (var i = 0; i < this.charts_.length; i++) {
 		this.charts_[i].render(this.getElement());
