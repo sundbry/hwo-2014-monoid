@@ -13,11 +13,14 @@
   ; 1. Calibrate accel (CD = 0, CF = 0) for period [0, 1]
   ; 2. Calibrate friction (CD = 0) (y-intercept intercept for period [1, 2]
   ; 3. Calibrate drag [2, 3] with known accel, friction
-  (let [profile (:characterizer driver)
+  (let [config (:config driver)
+        profile (:characterizer driver)
         dash (:dashboard driver)
         throttle (:throttle driver)]
-    (list
+    (concat (list
       (fn [tick-n]
+        (set-mode throttle :manual)
+        (new-setpoint throttle (:set-throttle config))
         (message/throttle (:throttle (tick throttle tick-n)) tick-n))
       (fn [tick-n]
         (let [throttle-state (read-state throttle)
@@ -29,7 +32,7 @@
                             0.0
                             0.0)]
           (teach-calib profile :throttle throttle-cf))
-        (message/ping tick-n))
+        (message/throttle (:throttle (tick throttle tick-n)) tick-n))
       (fn [tick-n]
         (let [calib-state (read-state profile)
               throttle-state (read-state throttle)
@@ -54,14 +57,23 @@
                         (:k-friction calib-state))]
           (teach-calib profile :drag drag-cf)        
           (auto-cal profile true)) ; enable auto cal after
-        (message/ping tick-n)))))
+        (message/ping tick-n)))
+      (repeat 100 (fn [tick-n] (message/ping tick-n)))
+      (list 
+        (fn [tick-n]        
+          (new-setpoint throttle (/ (:set-throttle config) 2))
+          (message/throttle (:throttle (tick throttle tick-n)) tick-n)))
+      (repeat 100 (fn [tick-n] (message/ping tick-n)))
+      (list
+        (fn [tick-n]        
+          (new-setpoint throttle (:set-throttle config))
+          (message/throttle (:throttle (tick throttle tick-n)) tick-n)))
+      )))
 
 (defrecord Driver [config track dashboard throttle characterizer driver-state tick-chan]
   component/Lifecycle
   
   (start [this]
-    (set-mode throttle :manual)
-    (new-setpoint throttle (:set-throttle config))
     (go (try (loop
                [routine (calib-process this)]
                (when-let [tick-num (<! tick-chan)]

@@ -34,10 +34,10 @@
      #_{:driver "Peach"        
       :speed 7.0
       :safe-angle 15.0}
-     {:driver "Bowser"        
+     #_{:driver "Bowser"        
       :speed 8.0
       :safe-angle 15.0}
-     #_{:driver "Banshee"
+     {:driver "Banshee"
       :set-throttle 0.55 ; throttle setpoint during calibration 
       }
    

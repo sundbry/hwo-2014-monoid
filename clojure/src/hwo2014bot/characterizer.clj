@@ -61,6 +61,7 @@
           dash-state (read-state (:dashboard profile))
           accel-est (calculate-accel (:throttle throttle-state) (:velocity dash-state) (:throttle calib) (:drag calib) (:k-friction calib))
           accel-error (- accel-est (:acceleration dash-state))
+          
           #_throttle-cf 
           #_(calibrate-throttle ; throttle-out A-measured V-measured drag-coeff k-friction
                         (:throttle throttle-state)
@@ -152,7 +153,7 @@
     {:config conf
      :calib-state (ref
                     {:auto-cal false
-                     :throttle 1.0
+                     :throttle 0.0
                      :drag 0.0
                      :k-friction 0.0
                      :acceleration-estimate 0

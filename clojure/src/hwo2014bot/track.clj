@@ -104,8 +104,7 @@
       (nth lane-sections (:section-index piece-pos))
       (nth lane-sections (:pieceIndex piece-pos))))
   (catch Exception e
-    (log/debug e "lookup-section failure")
-    (log/debug "lanes:" lanes "piece-pos:" piece-pos)
+    (log/debug e "lookup-section failure. piece-pos:" piece-pos)
     (throw e))))
 
 (defn lap-displacement [lane-cycle lap-size lap-num]
@@ -127,7 +126,7 @@
 (defn indexed-piece-position [pos-json lap-size]
   "Determine index of :piecePosition as a lane section position"
   (merge pos-json
-         {:section-index (if (:lap pos-json)      
+         {:section-index (if (> (:lap pos-json) 0) 
                            (+ (* (:lap pos-json) lap-size)
                               (:pieceIndex pos-json))
                            (:pieceIndex pos-json))}))
