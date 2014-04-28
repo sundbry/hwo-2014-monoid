@@ -10,6 +10,7 @@
                  [log4j "1.2.17"]
                  ; Non-standard project dependencies below
                  [org.clojure/core.async "0.1.278.0-76b25b-alpha"]
+                 [org.clojure/data.csv "0.1.2"]
                  [com.stuartsierra/component "0.2.1"]
                  [circular-buffer "0.1.0-SNAPSHOT"]]
   :main ^:skip-aot hwo2014bot.core

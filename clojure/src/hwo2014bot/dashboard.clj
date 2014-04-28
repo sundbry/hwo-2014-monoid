@@ -31,6 +31,7 @@
             :slip-angle (:angle cur-pos)
             :slip-velocity s-velocity ; slip angle velocity
             :slip-acceleration s-accel ; slip angle acceleration
+            :turn-radius 0.0
             :turn-angle-displacement 0.0 ; angular displacement around a turn
             :turn-angle-velocity 0.0 ; angular velocity around a turn
             :cent-acceleration 0.0} ; centripital acceleration
@@ -43,7 +44,8 @@
                                    (:turn-angle-displacement prev-dash))
                    a-velocity (/ delta-a-disp delta-t)
                    c-accel (/ (* (:velocity dash) (:velocity dash)) turn-radius)] ; Ac = V^2 / r
-               {:turn-angle-displacement a-disp
+               {:turn-radius turn-radius
+                :turn-angle-displacement a-disp
                 :turn-angle-velocity a-velocity 
                 :cent-acceleration c-accel})))))
 

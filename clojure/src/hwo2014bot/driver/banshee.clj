@@ -17,7 +17,9 @@
         dash (:dashboard driver)
         throttle (:throttle driver)]
     (list
-      (fn [tick-0]
+      (fn [tick-n]
+        (message/throttle (:throttle (tick throttle tick-n)) tick-n))
+      (fn [tick-n]
         (let [throttle-state (read-state throttle)
               dash-state (read-state dash)
               throttle-cf (char/calibrate-throttle ; throttle-out A-measured V-measured drag-coeff k-friction
@@ -27,8 +29,8 @@
                             0.0
                             0.0)]
           (teach-calib profile :throttle throttle-cf))
-        (message/ping tick-0))
-      (fn [tick-1]
+        (message/ping tick-n))
+      (fn [tick-n]
         (let [calib-state (read-state profile)
               throttle-state (read-state throttle)
               dash-state (read-state dash)
@@ -39,8 +41,8 @@
                             (:throttle calib-state)
                             0.0)]
           (teach-calib profile :k-friction friction-cf))
-        (message/ping tick-1))
-      (fn [tick-2]
+        (message/ping tick-n))
+      (fn [tick-n]
         (let [calib-state (read-state profile)
               throttle-state (read-state throttle)
               dash-state (read-state dash)
@@ -51,19 +53,19 @@
                         (:throttle calib-state)
                         (:k-friction calib-state))]
           (teach-calib profile :drag drag-cf))
-        (message/ping tick-2)))))
+        (message/ping tick-n)))))
 
 (defrecord Driver [config track dashboard throttle characterizer driver-state tick-chan]
   component/Lifecycle
   
   (start [this]
     (set-mode throttle :manual)
-    (new-setpoint throttle 1.0)
-    #_(go (try (loop
+    (new-setpoint throttle (:set-throttle config))
+    (go (try (loop
                [routine (calib-process this)]
                (when-let [tick-num (<! tick-chan)]
                  (if-let [step (first routine)]
-                   (>! tick-chan (apply step tick-num))
+                   (>! tick-chan (step tick-num))
                    (>! tick-chan (message/ping tick-num)))
                  (recur (next routine))))
           (catch Exception e

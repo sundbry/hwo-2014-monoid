@@ -50,7 +50,7 @@
                       A-measured)]
     k-friction))
       
-(defrecord PerformanceCharacterizer [config dashboard throttle calib-state output-chan]
+(defrecord PerformanceCharacterizer [config tracer dashboard throttle calib-state output-chan]
   component/Lifecycle
   
   (start [this]
@@ -94,7 +94,11 @@
     )
   
   (teach-calib [this property value]
-    (alter calib-state assoc property value))
+    (log/debug (str "Calibrate " property ":") value)
+    (dosync
+      (alter calib-state assoc property value)
+      (trace tracer :calib @calib-state))
+    this)
   
 )
 

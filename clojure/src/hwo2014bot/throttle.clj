@@ -54,7 +54,9 @@
                  :manual (manual-throttle ctrl tick-num)                        
                  (perform-throttle-pid ctrl
                                        (get (read-state dashboard) (:mode ctrl))
-                                       tick-num))))))
+                                       tick-num))))
+      (trace tracer :throttle (select-keys @throttle-state [:throttle :setpoint]))
+      @throttle-state))
   
   PPassiveComponent
   
