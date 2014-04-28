@@ -98,10 +98,15 @@
              car-data)))
 
 (defn lookup-section [lanes piece-pos]
+  (try
   (let [lane-sections (nth lanes (:startLaneIndex (:lane piece-pos)))]
     (if (< (:section-index piece-pos) (count lane-sections))   
       (nth lane-sections (:section-index piece-pos))
-      (nth lane-sections (:pieceIndex piece-pos)))))
+      (nth lane-sections (:pieceIndex piece-pos))))
+  (catch Exception e
+    (log/debug e "lookup-section failure")
+    (log/debug "lanes:" lanes "piece-pos:" piece-pos)
+    (throw e))))
 
 (defn lap-displacement [lane-cycle lap-size lap-num]
   (let [tail (nth lane-cycle (- lap-size 1))]
