@@ -34,14 +34,23 @@
          {:throttle (:setpoint ctrl)
           :tick tick-num}))
 
-(defrecord ThrottleController [tracer dashboard config throttle-state]
+(defrecord ThrottleController [tracer dashboard config throttle-state output-chan]
   
   component/Lifecycle
   
   (start [this]
+    (go (try (loop []
+      (when-let [dash (<! (output-channel dashboard))]
+        (let [state (select-keys @throttle-state [:throttle :setpoint])]
+          (trace tracer :throttle state)
+          (>! output-chan state))
+        (recur)))
+      (catch Exception e
+        (log/error e "Throttle trace error"))))
     this)
   
   (stop [this]
+    (close! output-chan)
     this)
   
   PActiveComponent
@@ -55,12 +64,11 @@
                  (perform-throttle-pid ctrl
                                        (get (read-state dashboard) (:mode ctrl))
                                        tick-num))))
-      (trace tracer :throttle (select-keys @throttle-state [:throttle :setpoint]))
       @throttle-state))
   
   PPassiveComponent
   
-  (output-channel [this] (throw (ex-info "not supported" this)))
+  (output-channel [this] output-chan)
   
   (read-state [this] @throttle-state)
   
@@ -90,4 +98,5 @@
                              :velocity {:kP 1.0 :kI 1.0 :kD 1.0}
                              :slip {:kP 1.0 :kI 1.0 :kD 1.0}}                            
                             reset-pid
-                            throttle-conf))}))
+                            throttle-conf))
+     :output-chan (chan)}))

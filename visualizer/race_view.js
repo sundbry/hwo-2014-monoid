@@ -41,7 +41,6 @@ monoid.RaceView = function() {
 var RaceView = monoid.RaceView;
 goog.inherits(RaceView, goog.ui.Component);
 
-
 /** @override */
 RaceView.prototype.createDom = function() {
   goog.base(this, 'createDom');
@@ -60,8 +59,25 @@ RaceView.prototype.createDom = function() {
                            this.handleSliderChanged_);
 
   this.carInfosDiv_ = this.dom_.createDom('div', 'car-info-container');
-  goog.style.setElementShown(this.carInfosDiv_, false);
+  goog.style.setElementShown(this.carInfosDiv_, true);
   this.dom_.appendChild(element, this.carInfosDiv_);
+
+	var chartForm = this.dom_.createDom('form');
+	this.dom_.appendChild(element, chartForm);
+  var label = this.dom_.createDom('label');
+  this.dom_.setTextContent(label, 'New chart:');
+  this.dom_.appendChild(chartForm, label);
+  var input = this.dom_.createDom('input', {id: 'new-chart-property', type: 'text'});
+  this.dom_.appendChild(chartForm, input);
+	var button = this.dom_.createDom('input', {type: 'submit'});
+	this.dom_.appendChild(chartForm, button);
+
+	var self = this;
+	var submit = function(e) { 
+		e.preventDefault();
+		self.handleLoadChart_(e); 
+	};
+  this.getHandler().listen(chartForm, goog.events.EventType.SUBMIT, submit);
 };
 
 
@@ -108,7 +124,7 @@ RaceView.prototype.setRace = function(race) {
     this.carInfoViews_.push(view);
   }
   this.slider_.max = race.getTotalGameTicks();
-  this.loadRaceCharts(race);
+  this.loadRaceCharts();
   this.setGameTick(0);
 };
 
@@ -129,10 +145,18 @@ RaceView.prototype.cleanup_ = function() {
   }
 };
 
-RaceView.prototype.loadRaceCharts = function(race) {
-	this.charts_ = monoid.RaceChart.createDefaultCharts(race);
+RaceView.prototype.handleLoadChart_ = function(e) {
+	var prop = document.getElementById('new-chart-property').value;
+	console.log("Loading chart for " + prop);
+	this.charts_.push(new monoid.RaceChart(this.race_, [prop]));
+	this.charts_[this.charts_.length - 1].render(this.getElement());
+};
+
+RaceView.prototype.loadRaceCharts = function() {
+	this.charts_ = monoid.RaceChart.createDefaultCharts(this.race_);
 	for (var i = 0; i < this.charts_.length; i++) {
 		this.charts_[i].render(this.getElement());
 	}
 };
+
 });

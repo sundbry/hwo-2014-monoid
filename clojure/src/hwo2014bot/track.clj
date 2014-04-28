@@ -58,7 +58,7 @@
   (drop two-laps (quot (count two-laps) 2)))
 
 (defn build-lap-loop [track-json]
-  (map #(build-lane (:pieces track-json) %)
+  (map #(build-lane (copy-laps (:pieces track-json) 2) %)
        (:lanes track-json))) ; todo loop the analysis for the tail-end of the track
 
 (defn build-fixed-laps [track-json num-laps]
@@ -103,19 +103,19 @@
       (nth lane-sections (:section-index piece-pos))
       (nth lane-sections (:pieceIndex piece-pos)))))
 
-(defn lap-displacement [lane-cycle]
-  (let [tail (last lane-cycle)]
-    (+ (:offset tail)
-       (:length tail))))
+(defn lap-displacement [lane-cycle lap-size lap-num]
+  (let [tail (nth lane-cycle (- lap-size 1))]
+    (* (+ (:offset tail)
+          (:length tail))
+       lap-num)))
 
-(defn start-displacement [lane-sections section piece-pos]
+(defn start-displacement [lane-sections section piece-pos lap-size]
   (if (< (:section-index piece-pos) (count lane-sections))
     ; sections defined through the end of the race (allows sprint through finish line)
     (+ (:offset section)
        (:inPieceDistance piece-pos))
     ; loop sections past the end of the race
-    (+ (* (lap-displacement lane-sections)
-          (:lap piece-pos))
+    (+ (lap-displacement lane-sections lap-size (:lap piece-pos))
        (:offset section)
        (:inPieceDistance piece-pos))))
 
@@ -138,8 +138,10 @@
                    :section section
                    :angle (:angle car)
                    :start-displacement (start-displacement (nth (:lanes track-state)
-                                                                (:startLaneIndex lane)) 
-                                                           section pos)}
+                                                                (:startLaneIndex lane))
+                                                           section
+                                                           pos
+                                                           (:lap-size track-state))}
                    ;:finish-displacement (finish-displacement (nth lanes (:endLaneIndex lane)) pos)
                    ]))
                new-positions)))

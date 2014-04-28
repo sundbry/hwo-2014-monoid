@@ -28,7 +28,8 @@
 
 (defprotocol PCharacterization
   (estimate-accel [_ throttle-out velocity])
-  (teach-calib [_ prop val]))
+  (teach-calib [_ prop val])
+  (auto-cal [_ enable]))
 
   ;(estimate-lower-accel [_ throttle-out V0])
   ;(estimate-upper-accel [_ throttle-out V0]))

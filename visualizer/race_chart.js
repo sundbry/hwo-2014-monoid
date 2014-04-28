@@ -24,22 +24,30 @@ var RaceChart = monoid.RaceChart;
 goog.inherits(RaceChart, goog.ui.Component);
 
 /** @const {number} */
-RaceChart.WIDTH = 400;
+RaceChart.WIDTH = 300;
 
 /** @const {number} */
-RaceChart.HEIGHT = 300;
+RaceChart.HEIGHT = 220;
 
 RaceChart.createDefaultCharts = function(race) {
-  return [new RaceChart(race, [// ["throttle" "output"]
-                                "dashboard.velocity",
-                                "dashboard.acceleration"]),
+  return [new RaceChart(race, ["throttle.setpoint",
+                               "throttle.throttle"]),
+					new RaceChart(race, ["dashboard.velocity",
+                               "dashboard.acceleration"]),
           new RaceChart(race, ["dashboard.slip-angle",
-                                "dashboard.slip-velocity",
-                                "dashboard.slip-acceleration"]),
+                               "dashboard.slip-velocity",
+                               "dashboard.slip-acceleration",
+															 "dashboard.cent-acceleration"]),
           new RaceChart(race, ["dashboard.slip-angle",
-                                "dashboard.turn-angle-displacement",
-                                "dashboard.turn-angle-velocity",
-                                "dashboard.cent-acceleration"])];
+                               "dashboard.turn-angle-displacement",
+                               "dashboard.turn-angle-velocity"]),
+					new RaceChart(race, ["calib.throttle",
+															 "calib.drag",
+															 "calib.k-friction",
+															 "calib.acceleration-error"]),
+					new RaceChart(race, ["dashboard.acceleration",
+                               "calib.acceleration-estimate",
+															 "calib.acceleration-error"])];
 }
 
 /** @override */

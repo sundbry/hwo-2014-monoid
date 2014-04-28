@@ -9,12 +9,12 @@
    :passive-timeout 30 ; ms to process passive data (leaves us 40ms for decision making)
    :trace 
      {:dir "data/keimola"
-      :csv true
+      :csv false
       }
    :dashboard
      {:instant 1} ; # of ticks for instantaneous measurements
    :characterizer
-     {}
+     {:passive true} ; enable passive recalibration
    :throttle
      {:velocity ; mode parameters
       {:kP 1.0
@@ -31,13 +31,13 @@
       :speed 6.30}
      #_{:driver "Luigi"
       :safe-angle 15.0}
-     {:driver "Peach"        
+     #_{:driver "Peach"        
       :speed 7.0
       :safe-angle 15.0}
      #_{:driver "Bowser"        
       :speed 8.0
       :safe-angle 15.0}
-     #_{:driver "Banshee"
+     {:driver "Banshee"
       :set-throttle 0.55 ; throttle setpoint during calibration 
       }
    

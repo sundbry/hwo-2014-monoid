@@ -52,7 +52,8 @@
                         (:velocity dash-state)
                         (:throttle calib-state)
                         (:k-friction calib-state))]
-          (teach-calib profile :drag drag-cf))
+          (teach-calib profile :drag drag-cf)        
+          (auto-cal profile true)) ; enable auto cal after
         (message/ping tick-n)))))
 
 (defrecord Driver [config track dashboard throttle characterizer driver-state tick-chan]

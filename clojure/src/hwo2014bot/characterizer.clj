@@ -6,6 +6,9 @@
             [hwo2014bot.protocol :refer :all]
             [hwo2014bot.constant :as const]))
 
+(def ^:private cal-limit 999999999)
+(def ^:private cal-low-limit (- cal-limit))
+
 ;; Calculate acceleration based on known coefficients
 (defn calculate-accel 
   ([throttle-out velocity drag-coeff]
@@ -49,20 +52,57 @@
                       (* drag-coeff V-measured V-measured)
                       A-measured)]
     k-friction))
+
+(defn passive-recalibrate [profile]
+  (dosync
+    (let [cfg (:config profile)
+          calib @(:calib-state profile)
+          throttle-state (read-state (:throttle profile))
+          dash-state (read-state (:dashboard profile))
+          accel-est (calculate-accel (:throttle throttle-state) (:velocity dash-state) (:throttle calib) (:drag calib) (:k-friction calib))
+          accel-error (- accel-est (:acceleration dash-state))
+          #_throttle-cf 
+          #_(calibrate-throttle ; throttle-out A-measured V-measured drag-coeff k-friction
+                        (:throttle throttle-state)
+                        (:acceleration dash-state)
+                        (:velocity dash-state)
+                        (:drag calib)
+                        (:k-friction calib))
+          drag-cf (calibrate-drag
+                    (:throttle throttle-state)
+                    (:acceleration dash-state)
+                    (:velocity dash-state)
+                    (:throttle calib)
+                    (:k-friction calib))
+          #_k-friction-cf
+          #_(calibrate-kinetic-friction
+                    (:throttle throttle-state)
+                    (:acceleration dash-state)
+                    (:velocity dash-state)
+                    (:throttle calib)
+                    (:drag calib))]
+      (alter (:calib-state profile) merge
+             {;:throttle (max (min throttle-cf cal-limit) cal-low-limit)
+              :drag (max (min drag-cf cal-limit) cal-low-limit)
+              ;:k-friction (max (min k-friction-cf cal-limit) cal-low-limit)
+              :acceleration-estimate (max (min accel-est cal-limit) cal-low-limit)
+              :acceleration-error (max (min accel-error cal-limit) cal-low-limit)}))))
       
 (defrecord PerformanceCharacterizer [config tracer dashboard throttle calib-state output-chan]
   component/Lifecycle
   
   (start [this]
-    (pipe (output-channel dashboard) output-chan)
-    #_(go (try (loop []
-      (when-let [dash-state (<! (output-chan dashboard))]
+    ;(pipe (output-channel dashboard) output-chan)
+    (go (try (loop []
+      (when-let [dash-state (<! (output-channel throttle))]
         ; Run passive (continuous) characterization
-        ; (passive-characterize this dash-state)
-        (>! output-chan)
+        (when (and (:passive config) (:auto-cal @calib-state))
+          (passive-recalibrate this))
+        (trace tracer :calib @calib-state)
+        (>! output-chan @calib-state)
         (recur)))
       (catch Exception e
-        (log/error e "Passive sharacterization error"))))
+        (log/error e "Passive characterization error"))))
     this)
   
   (stop [this]
@@ -94,17 +134,28 @@
     )
   
   (teach-calib [this property value]
-    (log/debug (str "Calibrate " property ":") value)
+    (log/debug (str "Teach calibration " property ":") value)
     (dosync
-      (alter calib-state assoc property value)
-      (trace tracer :calib @calib-state))
+      (alter calib-state assoc property value))
     this)
+  
+  ;; Enable continuous passive calibration
+  ;; Requires an original estimated calibration
+  (auto-cal [this set-enable]
+    (dosync
+      (alter calib-state assoc :auto-cal set-enable)))
   
 )
 
 (defn new-characterizer [conf]
   (map->PerformanceCharacterizer
     {:config conf
-     :calib-state (ref {:throttle 1.0 :drag 0.0 :k-friction 0.0})
+     :calib-state (ref
+                    {:auto-cal false
+                     :throttle 1.0
+                     :drag 0.0
+                     :k-friction 0.0
+                     :acceleration-estimate 0
+                     :acceleration-error 0})
      :output-chan (chan)}))
  
