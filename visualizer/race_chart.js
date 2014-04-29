@@ -44,17 +44,20 @@ RaceChart.createDefaultCharts = function(race) {
 					new RaceChart(race, ["calib.throttle",
 															 "calib.drag",
 															 "calib.k-friction",
+															 "calib.terminal-velocity",
 															 "calib.acceleration-error"]),
 					new RaceChart(race, ["dashboard.acceleration",
                                "calib.acceleration-estimate",
 															 "calib.acceleration-error"]),
 					new RaceChart(race, ["dashboard.velocity",
 															 "banshee.safe-velocity",
-															 "throttle.setpoint"]),
-					new RaceChart(race, ["banshee.safe-velocity",
+															 "throttle.setpoint"])
+					/*
+					, new RaceChart(race, ["banshee.safe-velocity",
 															 "banshee.turn-distance",
 															 "banshee.turn-velocity",
-															 "calib.terminal-velocity"])]
+															 "calib.terminal-velocity"])*/
+															 ];
 }
 
 /** @override */

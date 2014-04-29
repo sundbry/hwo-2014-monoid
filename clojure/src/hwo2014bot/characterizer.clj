@@ -174,7 +174,7 @@
       (calculate-accel throttle-out velocity (:throttle calib) (:drag calib) (:k-friction calib))))
   
   (safe-velocity [this target-distance target-velocity]
-    (let [target-row (find-first-row (:stop-matrix @calib-state) 
+    (dosync (let [target-row (find-first-row (:stop-matrix @calib-state) 
                                      #(<= (nth % 2) target-velocity)) ; target such that V < Vt
           start-row (find-last-row (:stop-matrix @calib-state)
                                    #(>= (- (nth target-row 1)
@@ -182,11 +182,11 @@
                                         target-distance)) ; start such that D > Dt
           result (if start-row 
                    (nth start-row 2)
-                   (nth target-row 2))]
+                   (:terminal-velocity @calib-state))]
       ;(log/debug "target-row:" target-row "start-row:" start-row)
       ;(log/debug "safe-velocity" target-distance "@" target-velocity ":" result)
       ;(inspect (:stop-matrix @calib-state))
-      result))
+      result)))
   
   ;; Estimate the lower-bound acceleration output, given throttle output and initial velocity.
   ;; Useful for projecting when to speed-up

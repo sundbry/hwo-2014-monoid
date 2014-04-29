@@ -20,7 +20,7 @@
    :throttle
      {:velocity ; mode parameters
       {:kP 1.0
-       :kI 1.0
+       :kI 2.0
        :kD 1.0}
       :slip-magnitude
       {:kP 1.0
