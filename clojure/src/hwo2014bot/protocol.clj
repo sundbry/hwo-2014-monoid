@@ -20,7 +20,8 @@
   (finish-race [_ finish-data])
   (update-positions [_ position-data])
   (car-position [_ car-name])
-  (my-position [_]))
+  (my-position [_])
+  (next-turn [_ from-pos]))
 
 (defprotocol PController
   (new-setpoint [_ sp-val])
@@ -28,6 +29,7 @@
 
 (defprotocol PCharacterization
   (estimate-accel [_ throttle-out velocity])
+  (safe-velocity [_ target-dist target-vel])
   (teach-calib [_ prop val])
   (auto-cal [_ enable]))
 

@@ -58,17 +58,54 @@
           (teach-calib profile :drag drag-cf)        
           (auto-cal profile true)) ; enable auto cal after
         (message/ping tick-n)))
-      (repeat 100 (fn [tick-n] (message/ping tick-n)))
-      (list 
+      #_(repeat 100 (fn [tick-n] (message/ping tick-n)))
+      #_(list ; calibrate deceleration
         (fn [tick-n]        
           (new-setpoint throttle (/ (:set-throttle config) 2))
           (message/throttle (:throttle (tick throttle tick-n)) tick-n)))
-      (repeat 100 (fn [tick-n] (message/ping tick-n)))
-      (list
+      #_(repeat 100 (fn [tick-n] (message/ping tick-n)))
+      #_(list
         (fn [tick-n]        
           (new-setpoint throttle (:set-throttle config))
           (message/throttle (:throttle (tick throttle tick-n)) tick-n)))
       )))
+
+(defn cruise [driver tick-n]
+  (let [throttle (:throttle driver)
+        track (:track driver)
+        pos (my-position track)
+        section (:section pos)
+        fwd-turn (next-turn track pos)
+        fwd-safe-vel
+        (if fwd-turn
+          (let [turn-distance (- (:offset fwd-turn)
+                                 (:start-displacement pos))
+                turn-velocity (:limit fwd-turn)]
+            (if (>= turn-distance 0)
+              (let [profile (:characterizer driver)
+                    safe-vel (safe-velocity profile turn-distance turn-velocity)]
+                (trace (:tracer driver) :banshee {:turn-distance turn-distance
+                                                  :turn-velocity turn-velocity
+                                                  :safe-velocity safe-vel})
+                safe-vel)
+              (do
+                ;(log/debug "negative turn distance:" turn-distance)
+                nil)))
+          nil)
+        safe-vel
+        (if (:straight? section)
+          fwd-safe-vel
+          (if (nil? fwd-safe-vel)
+            (:limit section)
+            (min (:limit section) fwd-safe-vel)))]
+    (if (nil? safe-vel)
+      (do        
+        (set-mode throttle :manual)
+        (new-setpoint throttle 1.0))
+      (do     
+        (set-mode throttle :velocity)
+        (new-setpoint throttle safe-vel)))
+    (message/throttle (:throttle (tick throttle tick-n)) tick-n)))
 
 (defrecord Driver [config track dashboard throttle characterizer driver-state tick-chan]
   component/Lifecycle
@@ -79,7 +116,7 @@
                (when-let [tick-num (<! tick-chan)]
                  (if-let [step (first routine)]
                    (>! tick-chan (step tick-num))
-                   (>! tick-chan (message/ping tick-num)))
+                   (>! tick-chan (cruise this tick-num)))
                  (recur (next routine))))
           (catch Exception e
             (log/error e "Banshee driver error"))))

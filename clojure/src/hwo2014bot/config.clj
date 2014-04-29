@@ -14,7 +14,9 @@
    :dashboard
      {:instant 1} ; # of ticks for instantaneous measurements
    :characterizer
-     {:passive true} ; enable passive recalibration
+     {:passive true ; enable passive recalibration
+      :matrix-freq 0.1 ; tick frequency to recalculate motion matrix
+      }
    :throttle
      {:velocity ; mode parameters
       {:kP 1.0
@@ -38,7 +40,7 @@
       :speed 8.0
       :safe-angle 15.0}
      {:driver "Banshee"
-      :set-throttle 0.55 ; throttle setpoint during calibration 
+      :set-throttle 1.0 ; throttle setpoint during calibration 
       }
    
      ; different AI drivers:

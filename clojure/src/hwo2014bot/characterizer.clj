@@ -1,6 +1,7 @@
 (ns hwo2014bot.characterizer
   (:require [clojure.tools.logging :as log]
             [clojure.core.async :refer [chan go go-loop >! <! close! pipe]]
+            [clojure.inspector :refer [inspect]]
             [com.stuartsierra.component :as component]
             [hamakar.circular-buffer :refer [cbuf]]
             [hwo2014bot.protocol :refer :all]
@@ -21,6 +22,14 @@
                    (* drag-coeff velocity velocity)
                    k-friction)]
       A-out)))
+
+(defn calculate-terminal-velocity [throttle-coeff drag-coeff k-friction]
+  ; A = 0
+  ; V = sqrt((CT - CF) / CD))
+  (if (= 0 drag-coeff)
+    nil
+    (Math/sqrt (/ (- throttle-coeff k-friction)
+                  drag-coeff))))
 
 ;; Returns throttle calibration factor measurement
 (defn calibrate-throttle
@@ -53,17 +62,48 @@
                       A-measured)]
     k-friction))
 
+(defn matrix-recalibrate [profile]
+  (let [cf @(:calib-state profile)
+        
+        terminal-velocity (:terminal-velocity cf)
+        X0 0.0
+        V0 (if (nil? terminal-velocity) ; when drag coeff is 0 
+             (:guess-terminal-velocity (:config profile))
+             terminal-velocity)
+        A0 (estimate-accel profile 0.0 V0)
+        tick-matrix (transient
+                      [[0 X0 V0 A0]])]      
+      ;(log/debug "Calibrating stop matrix for terminal velocity:" terminal-velocity)
+    (loop [T 1
+           Ap A0
+           Vp V0
+           Xp X0]
+      (let [X (+ Xp Vp)
+            V (+ Vp Ap)
+            A (estimate-accel profile 0.0 V)]
+        (conj! tick-matrix
+               [T X V A])          
+        (when (> V 0)
+            ; loop until a stop is reached
+          (recur (+ T 1) A V X))))
+      (dosync
+        (alter (:calib-state profile) merge
+               {:stop-matrix (persistent! tick-matrix)}))
+      ;(log/debug "Stop matrix calibrated, V0:" terminal-velocity "rows:" (count (:stop-matrix @(:calib-state profile))))
+      )
+  profile)
+
 (defn passive-recalibrate [profile]
-  (dosync
+  (dosync    
     (let [cfg (:config profile)
           calib @(:calib-state profile)
           throttle-state (read-state (:throttle profile))
           dash-state (read-state (:dashboard profile))
           accel-est (calculate-accel (:throttle throttle-state) (:velocity dash-state) (:throttle calib) (:drag calib) (:k-friction calib))
-          accel-error (- accel-est (:acceleration dash-state))
-          
-          #_throttle-cf 
-          #_(calibrate-throttle ; throttle-out A-measured V-measured drag-coeff k-friction
+          accel-error (- accel-est (:acceleration dash-state))]
+      (when (> (:velocity dash-state) 0)
+        (let [#_throttle-cf 
+              #_(calibrate-throttle ; throttle-out A-measured V-measured drag-coeff k-friction
                         (:throttle throttle-state)
                         (:acceleration dash-state)
                         (:velocity dash-state)
@@ -81,13 +121,22 @@
                     (:acceleration dash-state)
                     (:velocity dash-state)
                     (:throttle calib)
-                    (:drag calib))]
-      (alter (:calib-state profile) merge
-             {;:throttle (max (min throttle-cf cal-limit) cal-low-limit)
-              :drag (max (min drag-cf cal-limit) cal-low-limit)
-              ;:k-friction (max (min k-friction-cf cal-limit) cal-low-limit)
-              :acceleration-estimate (max (min accel-est cal-limit) cal-low-limit)
-              :acceleration-error (max (min accel-error cal-limit) cal-low-limit)}))))
+                    (:drag calib))
+          terminal-v (calculate-terminal-velocity (:throttle calib) (:drag calib) (:k-friction calib))]          
+          (alter (:calib-state profile) merge
+                 {;:throttle (max (min throttle-cf cal-limit) cal-low-limit)
+                  :drag (max (min drag-cf cal-limit) cal-low-limit)
+                  ;:k-friction (max (min k-friction-cf cal-limit) cal-low-limit)
+                  :terminal-velocity terminal-v
+                  :acceleration-estimate (max (min accel-est cal-limit) cal-low-limit)
+                  :acceleration-error (max (min accel-error cal-limit) cal-low-limit)})))))
+  profile)
+
+(defn find-first-row [coll pred]
+  (first (filter pred coll)))
+
+(defn find-last-row [coll pred]
+  (last (filter pred coll)))
       
 (defrecord PerformanceCharacterizer [config tracer dashboard throttle calib-state output-chan]
   component/Lifecycle
@@ -98,8 +147,10 @@
       (when-let [dash-state (<! (output-channel throttle))]
         ; Run passive (continuous) characterization
         (when (and (:passive config) (:auto-cal @calib-state))
-          (passive-recalibrate this))
-        (trace tracer :calib @calib-state)
+          (passive-recalibrate this)
+          (when (< (rand) (:matrix-freq config))
+            (matrix-recalibrate this)))
+        (trace tracer :calib (dissoc @calib-state :stop-matrix))
         (>! output-chan @calib-state)
         (recur)))
       (catch Exception e
@@ -121,6 +172,21 @@
   (estimate-accel [this throttle-out velocity]
     (let [calib @calib-state]
       (calculate-accel throttle-out velocity (:throttle calib) (:drag calib) (:k-friction calib))))
+  
+  (safe-velocity [this target-distance target-velocity]
+    (let [target-row (find-first-row (:stop-matrix @calib-state) 
+                                     #(<= (nth % 2) target-velocity)) ; target such that V < Vt
+          start-row (find-last-row (:stop-matrix @calib-state)
+                                   #(>= (- (nth target-row 1)
+                                           (nth % 1))
+                                        target-distance)) ; start such that D > Dt
+          result (if start-row 
+                   (nth start-row 2)
+                   (nth target-row 2))]
+      ;(log/debug "target-row:" target-row "start-row:" start-row)
+      ;(log/debug "safe-velocity" target-distance "@" target-velocity ":" result)
+      ;(inspect (:stop-matrix @calib-state))
+      result))
   
   ;; Estimate the lower-bound acceleration output, given throttle output and initial velocity.
   ;; Useful for projecting when to speed-up
@@ -150,13 +216,19 @@
 
 (defn new-characterizer [conf]
   (map->PerformanceCharacterizer
-    {:config conf
+    {:config (merge
+               {:passive false
+                :matrix-freq 0.1
+                :guess-terminal-velocity 50.0}
+               conf)
      :calib-state (ref
                     {:auto-cal false
                      :throttle 0.0
                      :drag 0.0
                      :k-friction 0.0
+                     :terminal-velocity 0.0
                      :acceleration-estimate 0
-                     :acceleration-error 0})
+                     :acceleration-error 0
+                     :stop-matrix nil})
      :output-chan (chan)}))
  

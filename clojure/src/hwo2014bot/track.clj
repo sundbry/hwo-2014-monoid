@@ -13,7 +13,7 @@
   {:offset section-offset
    :length (:length piece)
    :switch (:switch piece)
-   :limit Double/POSITIVE_INFINITY
+   :limit nil
    :straight? true
    :piece piece})
   
@@ -25,7 +25,7 @@
              ; left turn
              (arc-length (+ (:radius piece) lane-offset) (- 0 (:angle piece))))
    :switch (:switch piece)
-   :limit 0.6
+   :limit 6.5
    :straight? false
    :piece piece}) ; TODO speed limit formula + analysis
 
@@ -97,6 +97,12 @@
                [(:name (:id car)) {:color (:color (:id car))}])
              car-data)))
 
+(defn lane-section [lane section-idx]
+  (let [loop-length (count lane)]
+    (if (< section-idx loop-length)
+      (nth lane section-idx)
+      (nth lane (mod section-idx loop-length)))))
+
 (defn lookup-section [lanes piece-pos]
   (try
   (let [lane-sections (nth lanes (:startLaneIndex (:lane piece-pos)))]
@@ -149,6 +155,19 @@
                    ;:finish-displacement (finish-displacement (nth lanes (:endLaneIndex lane)) pos)
                    ]))
                new-positions)))
+
+(defn find-next-turn [lanes cur-pos]
+  "Return the next turn section within considerable distance, not including the current position, or nil"
+  (let [piece-pos (:piecePosition cur-pos)
+        idx (:section-index piece-pos)
+        lane (nth lanes (:endLaneIndex (:lane piece-pos)))        
+        forward-limit 10]
+    (loop [forward-idx 1]
+      (when (<= forward-idx forward-limit)
+        (let [fwd-section (lane-section lane (+ idx forward-idx))]
+          (if (:straight? fwd-section)
+            (recur (inc forward-idx))
+            fwd-section))))))
 
 (defrecord RaceTrack [config tracer input-chan output-chan state]
   component/Lifecycle
@@ -209,7 +228,9 @@
   
   (my-position [this]
     (car-position this (:name config)))
-    
+  
+  (next-turn [this from-pos]
+    (find-next-turn (:lanes @state) from-pos))
 
 ) ; end record
 

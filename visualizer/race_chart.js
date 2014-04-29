@@ -47,7 +47,14 @@ RaceChart.createDefaultCharts = function(race) {
 															 "calib.acceleration-error"]),
 					new RaceChart(race, ["dashboard.acceleration",
                                "calib.acceleration-estimate",
-															 "calib.acceleration-error"])];
+															 "calib.acceleration-error"]),
+					new RaceChart(race, ["dashboard.velocity",
+															 "banshee.safe-velocity",
+															 "throttle.setpoint"]),
+					new RaceChart(race, ["banshee.safe-velocity",
+															 "banshee.turn-distance",
+															 "banshee.turn-velocity",
+															 "calib.terminal-velocity"])]
 }
 
 /** @override */

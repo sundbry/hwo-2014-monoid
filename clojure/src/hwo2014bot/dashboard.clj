@@ -76,7 +76,9 @@
               :slip-angle 0.0 ; slip angle
               :slip-velocity 0.0 ; angular velocity
               :slip-acceleration 0.0 ; angular acceleration
-              :cent-velocity 0.0 ; centripital velocity 
+              :turn-radius 0.0
+              :turn-angle-displacement 0.0
+              :turn-angle-velocity 0.0
               :cent-acceleration 0.0 ; centripital acceleration
               })))
     
